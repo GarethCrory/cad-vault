@@ -1,25 +1,23 @@
-const json = (obj, status=200) => new Response(JSON.stringify(obj), { status, headers:{ "content-type":"application/json" }});
-
-function projId(n, name){
-  const num = String(n||"000").padStart(3,"0");
-  const safe = String(name||"Project").replace(/[^\w.-]+/g,"_");
-  return `${num}__${safe}`;
-}
+import { json, bad } from "../../_utils.js";
 
 export const onRequestPost = async ({ request, env }) => {
-  const { projectNumber, projectName } = await request.json();
-  const prefix = `projects/${projId(projectNumber, projectName)}/parts/`;
-  const list = await env.UPLOADS_BUCKET.list({ prefix });
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const { projectNumber, projectName } = body || {};
+  if (!projectNumber || !projectName) return bad("missing projectNumber/projectName");
 
-  const parts = list.objects.map(o => {
-    const key = o.key;
-    const seg = key.split("/");
-    // projects/<id>/parts/<type>/<part>/.../<filename>
-    const typePrefix = seg[3] || "Part";
-    const partNumber = seg[4] || "001";
-    const filename = seg[seg.length-1];
-    return { typePrefix, partNumber, filename, key, size:o.size, uploaded:o.uploaded?.toISOString?.() };
-  });
+  const cleanName = encodeURIComponent(projectName);
+  const idxKey = `data/${projectNumber}/${cleanName}/parts.json`;
 
-  return json({ success:true, parts });
+  let parts = [];
+  const obj = await env.UPLOADS_BUCKET.get(idxKey);
+  if (obj) {
+    try {
+      const t = await obj.text();
+      const j = JSON.parse(t);
+      parts = Array.isArray(j) ? j : (j.parts || []);
+    } catch {}
+  }
+
+  return json({ ok: true, project: { projectNumber, projectName }, parts });
 };

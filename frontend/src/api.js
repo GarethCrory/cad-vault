@@ -1,12 +1,24 @@
 const PROD_BASE = "https://cad-vault.fly.dev";
 const DEV_BASE = "http://localhost:4000";
+const STORAGE_KEY = "cadVault.apiBase";
 
-const BASE =
-  (typeof window !== "undefined" && window.__CAD_API_BASE__) ||
+function readWindowBase(){
+  if (typeof window === "undefined") return null;
+  if (window.__CAD_API_BASE__) return window.__CAD_API_BASE__;
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored || null;
+  } catch {
+    return null;
+  }
+}
+
+const runtimeBase =
+  readWindowBase() ||
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE) ||
   (typeof import.meta !== "undefined" && import.meta.env?.DEV ? DEV_BASE : PROD_BASE);
 
-export const API_BASE = BASE;
+export const API_BASE = runtimeBase;
 
 async function jpost(path, body){
   const r = await fetch(BASE + path, {

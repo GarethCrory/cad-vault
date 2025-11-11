@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { scanProject, history, editPart, generateRelease, API_BASE, bomTree, bomGet, deletePart, listAttachments, uploadAttachments, deleteAttachment } from "../api.js";
 import { linkAssembly } from "../api.assembly.js";

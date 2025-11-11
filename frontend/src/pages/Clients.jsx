@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { listProjects } from "../api.js";
+import { listProjects, updateProjectMeta } from "../api.js";
 import { BuildingOfficeIcon, EnvelopeIcon, PhoneIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { CLIENTS_KEY, deleteClient as removeClient, getSavedClients, mergeClientRecords, setSavedClients as persistSavedClients, upsertClient } from "../lib/clientStore.js";
 
@@ -108,11 +108,36 @@ export default function Clients(){
     setSavedClients(next);
   }
 
-  function handleEditClient(data, originalName){
-    const next = upsertClient(data, { originalName: originalName || editingClient?.name });
+  const handleEditClient = useCallback(async (data, originalName) => {
+    const targetOriginal = originalName || editingClient?.name || "";
+    const next = upsertClient(data, { originalName: targetOriginal });
     setSavedClients(next);
-    setEditingClient(null);
-  }
+    const newName = data?.name?.trim();
+    if (targetOriginal && newName && newName !== targetOriginal) {
+      const affected = projects.filter(
+        (p) => (p.client || "Personal Projects").trim() === targetOriginal
+      );
+      if (affected.length) {
+        await Promise.all(
+          affected.map((proj) =>
+            updateProjectMeta({
+              projectNumber: proj.projectNumber,
+              projectName: proj.projectName,
+              client: newName,
+              contactPerson: data.contactPerson || proj.contactPerson || "",
+              email: data.email || proj.email || "",
+              phone: data.phone || proj.phone || "",
+              notes: data.notes || proj.notes || "",
+            })
+          )
+        );
+        await loadProjects();
+      }
+      setClientOrder((prev) =>
+        prev.map((name) => (name === targetOriginal ? newName : name))
+      );
+    }
+  }, [editingClient?.name, projects, loadProjects]);
 
   function handleDeleteClient(name){
     if(!window.confirm(`Delete ${name}? This only removes your local note.`)) return;
@@ -293,13 +318,13 @@ function NewClientModal({ onClose, onSave, initialClient = null, mode = "add" })
     }
   }, [initialClient]);
 
-  function handleSubmit(e){
+  async function handleSubmit(e){
     e.preventDefault();
     if(!name.trim()){
       setError("Client name is required");
       return;
     }
-    onSave({ ...initialClient, name: name.trim(), contactPerson, email, phone, notes }, initialClient?.name);
+    await onSave({ ...initialClient, name: name.trim(), contactPerson, email, phone, notes }, initialClient?.name);
     onClose();
   }
 

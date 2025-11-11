@@ -1,4 +1,11 @@
-const BASE = "";
+const PROD_BASE = "https://cad-vault.fly.dev";
+const DEV_BASE = "http://localhost:4000";
+
+const BASE =
+  (typeof window !== "undefined" && window.__CAD_API_BASE__) ||
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE) ||
+  (typeof import.meta !== "undefined" && import.meta.env?.DEV ? DEV_BASE : PROD_BASE);
+
 export const API_BASE = BASE;
 
 async function jpost(path, body){
@@ -59,7 +66,7 @@ export async function scanProject(projectNumber, projectName){
 }
 
 export async function history({ projectNumber, projectName, typePrefix, partNumber }) {
-  const r = await fetch("/api/part/history", {
+  const r = await fetch(`${BASE}/api/part/history`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ projectNumber, projectName, typePrefix, partNumber })
@@ -110,7 +117,7 @@ export async function deletePart(body){
   }catch(err){
     const message = err?.message || "";
     if (typeof window !== "undefined" && (message.includes("Cannot POST") || message.includes("404"))) {
-      const res = await fetch("/api/part/edit", {
+      const res = await fetch(`${BASE}/api/part/edit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...(body || {}), action: "delete" })

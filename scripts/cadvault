@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -e
+
+HOST="http://localhost:4000"
+
+usage() {
+  echo "Usage:"
+  echo "  cadvault revise  -P <proj#> -N <proj name> -t <type> -n <part#> -f <file> -d <desc> -m <notes>"
+  echo "  cadvault upload  -P <proj#> -N <proj name> -t <type> -n <part#> -r <RevX> -f <file> -d <desc> -m <notes>"
+  echo "  cadvault release -P <proj#> -N <proj name> -g <tag>"
+  echo "  cadvault history -P <proj#> -N <proj name> -t <type> -n <part#>"
+  exit 1
+}
+
+cmd="$1"; shift || true
+
+PNUM=""; PNAME=""; TYPE=""; PART=""; FILE=""; DESC=""; NOTE=""; REV=""; TAG=""
+while getopts "P:N:t:n:f:d:m:r:g:" opt; do
+  case "$opt" in
+    P) PNUM="$OPTARG" ;;
+    N) PNAME="$OPTARG" ;;
+    t) TYPE="$OPTARG" ;;
+    n) PART="$OPTARG" ;;
+    f) FILE="$OPTARG" ;;
+    d) DESC="$OPTARG" ;;
+    m) NOTE="$OPTARG" ;;
+    r) REV="$OPTARG" ;;
+    g) TAG="$OPTARG" ;;
+    *) usage ;;
+  esac
+done
+
+case "$cmd" in
+  revise)
+    [ -z "$PNUM" ] && usage
+    [ -z "$PNAME" ] && usage
+    [ -z "$TYPE" ] && usage
+    [ -z "$PART" ] && usage
+    [ -z "$FILE" ] && usage
+    [ -z "$DESC" ] && usage
+    curl -s -X POST "$HOST/api/file/revise" \
+      -F "file=@$FILE;type=application/octet-stream" \
+      -F "project={\"projectNumber\":\"$PNUM\",\"projectName\":\"$PNAME\"}" \
+      -F "typePrefix=$TYPE" \
+      -F "partNumber=$PART" \
+      -F "description=$DESC" \
+      -F "notes=$NOTE"
+    ;;
+  upload)
+    [ -z "$PNUM" ] && usage
+    [ -z "$PNAME" ] && usage
+    [ -z "$TYPE" ] && usage
+    [ -z "$PART" ] && usage
+    [ -z "$REV" ] && usage
+    [ -z "$FILE" ] && usage
+    [ -z "$DESC" ] && usage
+    curl -s -X POST "$HOST/api/file/upload" \
+      -F "file=@$FILE;type=application/octet-stream" \
+      -F "project={\"projectNumber\":\"$PNUM\",\"projectName\":\"$PNAME\"}" \
+      -F "typePrefix=$TYPE" \
+      -F "partNumber=$PART" \
+      -F "rev=$REV" \
+      -F "description=$DESC" \
+      -F "notes=$NOTE"
+    ;;
+  release)
+    [ -z "$PNUM" ] && usage
+    [ -z "$PNAME" ] && usage
+    [ -z "$TAG" ] && usage
+    curl -s -X POST "$HOST/api/release/generate" \
+      -H "Content-Type: application/json" \
+      -d "{\"projectNumber\":\"$PNUM\",\"projectName\":\"$PNAME\",\"tag\":\"$TAG\"}"
+    ;;
+  history)
+    [ -z "$PNUM" ] && usage
+    [ -z "$PNAME" ] && usage
+    [ -z "$TYPE" ] && usage
+    [ -z "$PART" ] && usage
+    curl -s -X POST "$HOST/api/part/history" \
+      -H "Content-Type: application/json" \
+      -d "{\"projectNumber\":\"$PNUM\",\"projectName\":\"$PNAME\",\"typePrefix\":\"$TYPE\",\"partNumber\":\"$PART\"}"
+    ;;
+  *)
+    usage
+    ;;
+esac

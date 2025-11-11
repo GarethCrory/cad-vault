@@ -1,0 +1,83 @@
+{
+  "P001::Test Project": {
+    "A-002": {
+      "parent": {
+        "typePrefix": "A",
+        "partNumber": "002"
+      },
+      "children": [
+        {
+          "typePrefix": "P",
+          "partNumber": "001",
+          "qty": 1
+        },
+        {
+          "typePrefix": "A",
+          "partNumber": "001",
+          "qty": 1
+        },
+        {
+          "typePrefix": "P",
+          "partNumber": "002",
+          "qty": 1
+        },
+        {
+          "typePrefix": "P",
+          "partNumber": "003",
+          "qty": 1
+        },
+        {
+          "typePrefix": "P",
+          "partNumber": "004",
+          "qty": 1
+        }
+      ]
+    },
+    "A-001": {
+      "parent": {
+        "typePrefix": "A",
+        "partNumber": "001"
+      },
+      "children": [
+        {
+          "typePrefix": "P",
+          "partNumber": "001",
+          "qty": 1
+        },
+        {
+          "typePrefix": "P",
+          "partNumber": "002",
+          "qty": 1
+        }
+      ]
+    },
+    "A-003": {
+      "parent": {
+        "typePrefix": "A",
+        "partNumber": "003"
+      },
+      "children": [
+        {
+          "typePrefix": "P",
+          "partNumber": "001",
+          "qty": 1
+        }
+      ]
+    }
+  },
+  "P244::ISCA": {
+    "A-001": {
+      "parent": {
+        "typePrefix": "A",
+        "partNumber": "001"
+      },
+      "children": [
+        {
+          "typePrefix": "P",
+          "partNumber": "001",
+          "qty": 1
+        }
+      ]
+    }
+  }
+}

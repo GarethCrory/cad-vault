@@ -1,0 +1,813 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { scanProject, history, editPart, generateRelease } from "../api.js";
+import { PencilSquareIcon, ClockIcon, BoltIcon, ArrowUpTrayIcon, XMarkIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import HistoryModal from "../components/HistoryModal";
+
+const PartTypeBadge = ({ t }) => (
+  <span className="badge badge-blue">{t}</span>
+);
+
+function pad3(n){ return String(n).padStart(3,"0"); }
+
+function ReleaseTab({ project, parts = [], onPublish }) {
+  const [tag, setTag] = useState(new Date().toISOString().split('T')[0]);
+  const [selected, setSelected] = useState(new Set());
+
+  useEffect(() => {
+    setSelected(prev => {
+      const next = new Set([...prev].filter(id => parts.some(p => `${p.typePrefix}${pad3(p.partNumber)}` === id)));
+      return next;
+    });
+  }, [parts]);
+
+  function toggle(id){
+    setSelected(s => {
+      const n = new Set(s);
+      if(n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+
+  function selectAll(){
+    setSelected(new Set(parts.map(p => `${p.typePrefix}${pad3(p.partNumber)}`)));
+  }
+  function deselectAll(){
+    setSelected(new Set());
+  }
+
+  async function publish(){
+    const files = [...selected];
+    onPublish && onPublish({ tag, files });
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="card p-6">
+        <h3 className="font-semibold mb-4">Configure Client Release</h3>
+        
+        <label className="text-xs text-slate-600">Release Tag</label>
+        <input 
+          type="text" 
+          className="input mb-4" 
+          value={tag}
+          onChange={e => setTag(e.target.value)}
+          placeholder="YYYY-MM-DD"
+        />
+        <div className="text-xs text-slate-500 mb-6">Used in ZIP filename and directory structure</div>
+
+        <div className="flex items-center gap-2 mb-4">
+          <button className="btn-ghost text-sm" onClick={deselectAll}>
+            Deselect All
+          </button>
+          <button className="btn-ghost text-sm" onClick={selectAll}>
+            Select All
+          </button>
+          <div className="flex-1 text-right text-xs text-slate-500">
+            {selected.size} of {parts.length} selected
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {parts.map(p => {
+            const id = `${p.typePrefix}${pad3(p.partNumber)}`;
+            const fileLabel = p.latestFile || `${project.projectNumber}_${p.typePrefix}${pad3(p.partNumber)}_Rev${p.latestRev||"?"}.step`;
+            return (
+              <label key={id} className="flex items-start gap-4 p-4 bg-slate-50 rounded-lg">
+                <input type="checkbox" checked={selected.has(id)} onChange={() => toggle(id)} />
+                <div className="flex-1">
+                  <div className="font-medium">{p.description || id}</div>
+                  <div className="text-xs text-slate-500 font-mono mt-1">{fileLabel}</div>
+                </div>
+                <div className="ml-4">
+                  <span className="badge badge-blue">CAD</span>
+                </div>
+              </label>
+            );
+          })}
+          {parts.length === 0 && <div className="text-sm text-slate-500 p-4">No files available for release.</div>}
+        </div>
+
+        <button 
+          className="btn btn-primary w-full mt-6"
+          onClick={publish}
+          disabled={selected.size === 0}
+        >
+          Publish Release ({selected.size} files)
+        </button>
+      </div>
+
+      <div className="card">
+        <div className="px-6 py-4">
+          <h3 className="font-semibold">Previous Releases</h3>
+        </div>
+        <div className="border-t border-slate-200">
+          <div className="p-6 text-sm text-slate-500">No previous releases</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Project(){
+  const { projectNumber, projectName } = useParams();
+  const project = { projectNumber, projectName };
+
+  const [parts, setParts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [editing, setEditing] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyTarget, setHistoryTarget] = useState({ projectCode: null, partNumber: null });
+  const [releaseLoading, setReleaseLoading] = useState(false);
+  const [releaseSuccess, setReleaseSuccess] = useState(false);
+  const [releasePath, setReleasePath] = useState("");
+  const [revUpOpen, setRevUpOpen] = useState(false);
+  const [revUpSelected, setRevUpSelected] = useState(null);
+  const [activeTab, setActiveTab] = useState('files');
+
+  const types = [
+    { key: "P", label: "Parts" },
+    { key: "S", label: "Sub-assemblies" },
+    { key: "A", label: "Assemblies" },
+    { key: "H", label: "Hardware" },
+    { key: "O", label: "OEM" },
+  ];
+
+  // compute next number per type (e.g. P -> "003")
+  const perTypeNext = useMemo(() => {
+    const next = {};
+    types.forEach(t => next[t.key] = "001");
+    (parts || []).forEach(p => {
+      const n = parseInt(p.partNumber, 10) || 0;
+      if (!Number.isNaN(n)) {
+        const candidate = String(n + 1).padStart(3, "0");
+        if (parseInt(candidate, 10) > parseInt(next[p.typePrefix], 10)) {
+          next[p.typePrefix] = candidate;
+        }
+      }
+    });
+    return next;
+  }, [parts]);
+
+  // keep old single nextPartNumber (for header card) but prefer Parts next
+  const nextPartNumber = perTypeNext.P || "001";
+
+  // UI state: grouped vs flat
+  const [viewMode, setViewMode] = useState("grouped");
+
+  // which type panels are expanded (Parts open by default)
+  const [expandedTypes, setExpandedTypes] = useState(() => {
+    const init = {};
+    types.forEach(t => { init[t.key] = t.key === "P"; });
+    return init;
+  });
+  function toggleType(key){ setExpandedTypes(s => ({ ...s, [key]: !s[key] })); }
+  
+  async function load(){
+    setLoading(true);
+    setError("");
+    try{
+      const sc = await scanProject(projectNumber, projectName);
+      setParts(sc.parts || []);
+    }catch(e){
+      setError("Could not load project parts");
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  useEffect(()=>{ load(); }, []);
+
+  function openAdd(){ setShowAdd(true); }
+  function closeAdd(){ setShowAdd(false); }
+
+  async function onSaveEdit(form){
+    await editPart({
+      projectNumber, projectName,
+      typePrefix: form.typePrefix,
+      partNumber: form.partNumber,
+      newTypePrefix: form.newTypePrefix,
+      newDescription: form.newDescription,
+      note: form.note||""
+    });
+    setEditing(null);
+    await load();
+  }
+
+  function openHistory(p) {
+    const projectCode = `${projectNumber}_${projectName}`;
+    const partNumber = `${p.typePrefix}${String(p.partNumber).padStart(3,"0")}`;
+    setHistoryTarget({ projectCode, partNumber });
+    setHistoryOpen(true);
+  }
+
+  async function handleRelease(opts) {
+    setReleaseLoading(true);
+    try {
+      const payload = {
+        projectNumber,
+        projectName,
+        tag: opts?.tag || new Date().toISOString().split('T')[0],
+        files: opts?.files || []
+      };
+      const result = await generateRelease(payload);
+      setReleasePath(result.path || "");
+      setReleaseSuccess(true);
+      setTimeout(() => setReleaseSuccess(false), 3000);
+    } catch (err) {
+      console.error("Release failed:", err);
+    } finally {
+      setReleaseLoading(false);
+    }
+  }
+
+  function openRevUpFor(part){
+    setRevUpSelected(part);
+    setRevUpOpen(true);
+  }
+
+  return (
+    <div className="page-container compact">
+      <div className="space-y-6 w-full">
+        <div className="flex items-center gap-3">
+          <Link to="/" className="btn-ghost">Back to Projects</Link>
+        </div>
+
+        <div className="card p-6 grid gap-6 lg:grid-cols-2 items-start">
+          <div className="flex items-start gap-4">
+            <div className="h-14 w-14 rounded-xl bg-ink text-white grid place-items-center text-2xl">📁</div>
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-500">{projectNumber}</span>
+                <span className="badge badge-green">active</span>
+              </div>
+              <h2 className="text-3xl font-extrabold tracking-tight">{projectName}</h2>
+              <div className="text-xs text-slate-500 mt-1">Client release management</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 w-full lg:w-auto lg:items-end">
+            <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setRevUpOpen(true)}
+                disabled={releaseLoading}
+                title="Rev up"
+              >
+                <BoltIcon className="h-6 w-6" />
+                Rev Up
+              </button>
+              <button className="btn btn-primary" onClick={openAdd}>
+                <ArrowUpTrayIcon className="h-6 w-6" />
+                Add File
+              </button>
+            </div>
+
+            <div className="project-stats grid grid-cols-2 gap-4 w-full lg:w-auto">
+              <div className="stat-card p-4 rounded-lg text-center">
+                <div className="text-sm text-slate-500">Total Parts</div>
+                <div className="text-2xl font-bold">{parts.length}</div>
+              </div>
+              <div className="stat-card p-4 rounded-lg text-center">
+                <div className="text-sm text-slate-500">Next Part #</div>
+                <div className="text-2xl font-bold text-orange-500">{nextPartNumber}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="tabbar">
+          <button 
+            className={`tab ${activeTab === 'files' ? 'tab-active' : ''}`}
+            onClick={() => setActiveTab('files')}
+          >
+            Files & Parts
+          </button>
+          <button 
+            className={`tab ${activeTab === 'release' ? 'tab-active' : ''}`}
+            onClick={() => setActiveTab('release')}
+          >
+            Client Release
+          </button>
+        </div>
+
+        {activeTab === 'files' ? (
+        <div className="card overflow-hidden">
+            <div className="px-6 py-4 flex flex-wrap items-center gap-4 justify-between">
+              <div className="font-semibold">Parts & Files</div>
+              <div className="flex items-center gap-3">
+                <div className="text-xs badge badge-muted">{parts.length} parts</div>
+                <div
+                  role="group"
+                  aria-label="View mode"
+                  className="inline-flex rounded-xl border border-slate-200 overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    aria-pressed={viewMode === "grouped"}
+                    className={`px-3 py-1.5 text-sm ${viewMode === "grouped" ? "font-semibold bg-white text-slate-900" : "text-slate-600"}`}
+                    onClick={() => setViewMode("grouped")}
+                  >
+                    Grouped
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={viewMode === "flat"}
+                    className={`px-3 py-1.5 text-sm ${viewMode === "flat" ? "font-semibold bg-white text-slate-900" : "text-slate-600"}`}
+                    onClick={() => setViewMode("flat")}
+                  >
+                    Flat
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            { !loading && viewMode === "grouped" ? (
+              <div className="space-y-4">
+                {types.map(t => {
+                  const group = parts.filter(p => p.typePrefix === t.key);
+                  const expanded = !!expandedTypes[t.key];
+                  const smallEmpty = !expanded && group.length === 0;
+                  return (
+                    <div key={t.key} className={`card ${smallEmpty ? 'p-3' : 'p-4'}`}>
+                      <div
+                        className="flex items-center justify-between mb-3 cursor-pointer"
+                        onClick={() => toggleType(t.key)}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <div>
+                          <div className="text-lg font-bold">{t.label}</div>
+                          <div className="text-xs text-slate-400">{group.length} items</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="stat-card px-3 py-1 rounded-full text-sm">
+                            Next {t.key}{perTypeNext[t.key] || "001"}
+                          </div>
+                          <div className="text-xs text-slate-500">{expanded ? 'Collapse' : 'Expand'}</div>
+                        </div>
+                      </div>
+
+                      {expanded && (
+                        <div className="table-scroll">
+                          <table className="table parts-table compact">
+                            <thead className="bg-slate-50">
+                              <tr>
+                                <th className="th text-xs h-12">Type</th>
+                                <th className="th text-xs h-12">Part #</th>
+                                <th className="th text-xs h-12">Description</th>
+                                <th className="th text-xs h-12">File</th>
+                                <th className="th text-xs h-12">Rev</th>
+                                <th className="th text-xs h-12">Notes</th>
+                                <th className="th text-xs h-12">Source</th>
+                                <th className="th text-xs h-12 text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200">
+                              {group.map(item => (
+                                <PartRow key={item.typePrefix + "-" + item.partNumber}
+                                  p={item}
+                                  projectNumber={projectNumber}
+                                  projectName={projectName}
+                                  onEdit={()=>setEditing(item)}
+                                  onHistory={()=>openHistory(item)}
+                                  onRevUp={()=>openRevUpFor(item)}
+                                />
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                      {/* keep minimal footprint when expanded & empty */}
+                      {expanded && group.length === 0 && <div className="h-12" />}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              // flat table (single table with header) when not grouped
+              <div className="table-scroll">
+                <table className="table parts-table compact">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="th text-xs h-12">Type</th>
+                      <th className="th text-xs h-12">Part #</th>
+                      <th className="th text-xs h-12">Description</th>
+                      <th className="th text-xs h-12">File</th>
+                      <th className="th text-xs h-12">Rev</th>
+                      <th className="th text-xs h-12">Notes</th>
+                      <th className="th text-xs h-12">Source</th>
+                      <th className="th text-xs h-12 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {loading && <tr><td className="td text-sm py-2 leading-tight" colSpan="8">Loading…</td></tr>}
+                    {!loading && parts.length===0 && <tr><td className="td text-sm py-2 leading-tight" colSpan="8">No parts yet.</td></tr>}
+                    {!loading && parts.map(p => (
+                      <PartRow
+                        key={p.typePrefix + "-" + p.partNumber}
+                        p={p}
+                        projectNumber={projectNumber}
+                        projectName={projectName}
+                        onEdit={()=>setEditing(p)}
+                        onHistory={()=>openHistory(p)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          <ReleaseTab 
+            project={project}
+            parts={parts}
+            onPublish={handleRelease}
+          />
+        )}
+
+        {editing && <EditModal p={editing} project={{projectNumber,projectName}} onClose={()=>setEditing(null)} onSave={onSaveEdit} />}
+        {showAdd && (
+          <AddFileModal
+            project={project}
+            defaultType="P"
+            defaultPartNumber={nextPartNumber}
+            perTypeNext={perTypeNext}
+            onClose={closeAdd}
+            onSaved={()=>{ closeAdd(); load(); }}
+          />
+        )}
+        {revUpOpen && (
+          <RevUpModal
+            parts={parts}
+            project={project}
+            initialSelected={revUpSelected}
+            onClose={() => { setRevUpOpen(false); setRevUpSelected(null); }}
+            onSaved={() => { setRevUpOpen(false); setRevUpSelected(null); load(); }}
+          />
+        )}
+        <HistoryModal 
+          isOpen={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          projectCode={historyTarget.projectCode}
+          partNumber={historyTarget.partNumber}
+        />
+
+        {releaseSuccess && (
+          <div className="fixed bottom-4 right-4 bg-green-50 text-green-700 px-4 py-3 rounded-xl shadow-lg flex items-center gap-2">
+            <CheckCircleIcon className="h-5 w-5" />
+            <div>
+              <div className="font-medium">Release generated!</div>
+              {releasePath && (
+                <div className="text-sm">Path: {releasePath}</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function parseDescription(filename) {
+  if (!filename) return "";
+  const match = /_Rev[A-Z]_(.+)\.[^.]+$/.exec(filename);
+  return match ? match[1].replace(/[-_]/g, " ").trim() : "";
+}
+
+// Update PartNumberCell to show simplified part numbers
+function PartNumberCell({ typePrefix, partNumber, tooltip }) {
+  const displayNumber = `${typePrefix}${String(partNumber).padStart(3,"0")}`;
+  
+  return (
+    <div className="relative group">
+      <span className="font-mono">{displayNumber}</span>
+      <div className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap">
+        {tooltip}
+      </div>
+    </div>
+  );
+}
+
+function PartRow({ p, projectNumber, projectName, onEdit, onHistory, onRevUp }) {
+  const [latest, setLatest] = useState(p.latestRev || "");
+  const [latestFile, setLatestFile] = useState(p.latestFile || "");
+  useEffect(() => {
+    let mounted = true;
+    // only fetch history if we don't already have rev/file info
+    if (!p.latestRev && !p.latestFile) {
+      history({ projectNumber, projectName, typePrefix: p.typePrefix, partNumber: p.partNumber })
+        .then(h => {
+          if (!mounted) return;
+          setLatest(h.latestRev || "");
+          setLatestFile(h.latestFile || "");
+        })
+        .catch(() => {/* noop */});
+    }
+    return () => { mounted = false; };
+  }, [p, projectNumber, projectName]);
+
+  const rev = p.latestRev || p.rev || latest || "";
+  const desc = p.description || parseDescription(latestFile) || "—";
+  return (
+    <tr>
+      <td className="td text-sm py-2 leading-tight"><PartTypeBadge t={p.typePrefix} /></td>
+      <td className="td text-sm py-2 leading-tight">
+        <PartNumberCell
+          typePrefix={p.typePrefix}
+          partNumber={p.partNumber}
+          tooltip={latestFile || "No source file"}
+        />
+      </td>
+      <td className="td text-sm py-2 leading-tight truncate max-w-[40ch]">{desc}</td>
+      <td className="td text-sm py-2 leading-tight"><span className="chip chip-step">STEP</span></td>
+      <td className="td text-sm py-2 leading-tight">
+        {rev ? <span className="chip chip-rev">Rev{rev}</span> : <span className="text-slate-400">—</span>}
+      </td>
+      <td className="td text-sm py-2 leading-tight text-slate-500">Manual</td>
+      <td className="td text-sm py-2 leading-tight"><span className="badge badge-muted">Manual</span></td>
+      <td className="td text-sm py-2 leading-tight">
+        <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+          <button onClick={onEdit} title="Edit" className="icon-btn" type="button">
+            <PencilSquareIcon className="h-6 w-6" />
+          </button>
+          <button onClick={() => onHistory?.(p)} title="History" className="icon-btn" type="button">
+            <ClockIcon className="h-6 w-6" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onRevUp?.(p)}
+            title="Rev Up"
+            className="icon-btn cursor-pointer"
+            aria-label={`Rev up ${p.typePrefix}${pad3(p.partNumber)}`}
+          >
+            <BoltIcon className="h-6 w-6 text-orange-500" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function EditModal({p, project, onClose, onSave}){
+  const [desc,setDesc] = useState(p.description||"");
+  const [type,setType] = useState(p.typePrefix);
+  const [note,setNote] = useState("");
+
+  async function save(){
+    await onSave({
+      typePrefix: p.typePrefix,
+      partNumber: p.partNumber,
+      newTypePrefix: type,
+      newDescription: desc,
+      note
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/20 grid place-items-center p-4 z-50">
+      <div className="card w-full max-w-xl p-6 relative">
+        <button className="absolute right-4 top-4 text-slate-500" onClick={onClose}><XMarkIcon className="h-5 w-5" /></button>
+        <div className="text-lg font-semibold mb-1">Edit Part</div>
+        <div className="text-xs text-slate-500 mb-4">Update part details. Project and part numbers cannot be changed.</div>
+
+        <div className="text-xs text-slate-600 mb-2">Part Number (read-only)</div>
+        <div className="input mb-4 font-mono bg-slate-50">{project.projectNumber}_{p.typePrefix}{p.partNumber.padStart(3,"0")}</div>
+
+        <label className="text-xs text-slate-600">Description</label>
+        <input className="input mb-4" value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Description" />
+
+        <label className="text-xs text-slate-600">Part Type</label>
+        <select className="select mb-4" value={type} onChange={e=>setType(e.target.value)}>
+          <option value="P">Part</option>
+          <option value="A">Assembly</option>
+          <option value="S">SubAssembly</option>
+          <option value="H">Hardware</option>
+          <option value="O">OEM</option>
+        </select>
+
+        <label className="text-xs text-slate-600">Note</label>
+        <input className="input mb-6" value={note} onChange={e=>setNote(e.target.value)} placeholder="Change note" />
+
+        <div className="flex items-center justify-end gap-2">
+          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn" onClick={save}>Save Changes</button>
+        </div>
+
+        <div className="text-xs text-slate-500 mt-4">
+          Current canonical filename will update after save and refresh.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddFileModal({ project, defaultType="P", defaultPartNumber="001", perTypeNext = {}, onClose, onSaved }) {
+  const [typePrefix, setTypePrefix] = useState(defaultType);
+  const [partNumber, setPartNumber] = useState(defaultPartNumber);
+  const [description, setDescription] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef(null);
+
+  // when modal opens or type changes, prefill next for selected type
+  useEffect(() => {
+    const next = perTypeNext[typePrefix] || "001";
+    // only prefill if user hasn't typed a custom value (simple heuristic)
+    if (!partNumber || /^[0]+$/.test(partNumber) || partNumber === defaultPartNumber) {
+      setPartNumber(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typePrefix, perTypeNext]);
+
+  // allow manual editing but normalize digits
+  function onPartInput(v){
+    setPartNumber(v.replace(/[^0-9]/g,"").slice(-3).padStart(3,"0"));
+  }
+
+  async function submit(){
+    if(busy) return;
+    const file = fileRef.current?.files?.[0];
+    if(!file) {
+      alert("Please choose a .step file to upload.");
+      return;
+    }
+
+    setBusy(true);
+    try{
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("originalname", file.name);
+      fd.append("projectNumber", project.projectNumber);
+      fd.append("projectName", project.projectName);
+      fd.append("typePrefix", typePrefix);
+      fd.append("partNumber", partNumber);
+      fd.append("rev", "RevA");
+      fd.append("description", description||"");
+      fd.append("notes", note||"Added via UI");
+
+      const r = await fetch("http://localhost:4000/api/file/revise", { method:"POST", body: fd });
+      const text = await r.text();
+      let body;
+      try { body = JSON.parse(text); } catch(e){ body = text; }
+
+      if(!r.ok){
+        throw new Error((body && body.error) ? body.error : String(body));
+      }
+
+      onSaved && onSaved();
+    }catch(err){
+      alert(err.message || String(err));
+    }finally{
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/20 grid place-items-center p-4 z-50">
+      <div className="card w-full max-w-xl p-6 relative">
+        <button className="absolute right-4 top-4 text-slate-500" onClick={onClose}><XMarkIcon className="h-5 w-5" /></button>
+        <div className="text-lg font-semibold mb-1">Add File</div>
+        <div className="text-xs text-slate-500 mb-4">Choose a STEP file and enter details. New parts start at RevA.</div>
+
+        <label className="text-xs text-slate-600">Description</label>
+        <input className="input mb-4" value={description} onChange={e=>setDescription(e.target.value)} placeholder="e.g. Base Plate" />
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-slate-600">Part Type</label>
+            <select className="select mb-4" value={typePrefix} onChange={e=>setTypePrefix(e.target.value)}>
+              <option value="P">Part</option>
+              <option value="A">Assembly</option>
+              <option value="S">SubAssembly</option>
+              <option value="H">Hardware</option>
+              <option value="O">OEM</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-slate-600">Part Number</label>
+            <input className="input mb-4 font-mono" value={partNumber} onChange={e=>onPartInput(e.target.value)} />
+          </div>
+        </div>
+
+        <label className="text-xs text-slate-600">Note</label>
+        <input className="input mb-4" value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional note" />
+
+        <label className="text-xs text-slate-600">File (.step)</label>
+        <input type="file" accept=".step,.stp" ref={fileRef} className="mb-6" />
+
+        <div className="flex items-center justify-end gap-2">
+          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={busy} onClick={submit}>
+            <ArrowUpTrayIcon className="h-5 w-5" />
+            {busy ? "Uploading…" : "Upload"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// helper: next revision letter (A -> B, Z -> Z+1 stays Z)
+function nextRevLetter(curr){
+  if(!curr) return "A";
+  // accept either "A" or "RevA"
+  const m = /Rev?([A-Z])$/i.exec(String(curr));
+  const c = m ? m[1].toUpperCase() : String(curr).toUpperCase();
+  if(c === "Z") return "Z";
+  const next = String.fromCharCode(c.charCodeAt(0) + 1);
+  return next;
+}
+
+function RevUpModal({ parts = [], project, initialSelected = null, onClose, onSaved }) {
+  const [selected, setSelected] = useState(parts[0] || null);
+  const [file, setFile] = useState(null);
+  const [notes, setNotes] = useState("");
+  const [description, setDescription] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setSelected(initialSelected || parts[0] || null);
+  }, [parts]);
+
+  function onPick(id){
+    const p = parts.find(x => `${x.typePrefix}${pad3(x.partNumber)}` === id);
+    setSelected(p || null);
+    setDescription(p?.description || "");
+  }
+
+  async function submit(){
+    if(!selected){
+      alert("Select a part to rev up.");
+      return;
+    }
+    if(!file){
+      alert("Choose a STEP file for the new revision.");
+      return;
+    }
+
+    setBusy(true);
+    try{
+      const nextRev = nextRevLetter(selected.latestRev || selected.rev || "");
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("originalname", file.name);
+      fd.append("projectNumber", project.projectNumber);
+      fd.append("projectName", project.projectName);
+      fd.append("typePrefix", selected.typePrefix);
+      fd.append("partNumber", String(selected.partNumber).padStart(3,"0"));
+      fd.append("rev", nextRev); // backend expects the next rev letter
+      fd.append("description", description || selected.description || "");
+      fd.append("notes", notes || `Rev up to ${nextRev}`);
+
+      const r = await fetch("/api/file/revise", { method: "POST", body: fd });
+      const text = await r.text();
+      let body;
+      try { body = JSON.parse(text); } catch(e){ body = text; }
+
+      if(!r.ok) throw new Error((body && body.error) ? body.error : String(body));
+      onSaved && onSaved();
+    }catch(err){
+      alert(err.message || String(err));
+    }finally{
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/20 grid place-items-center p-4 z-50">
+      <div className="card w-full max-w-md p-4 relative">
+        <button className="absolute right-3 top-3 text-slate-500" onClick={onClose}><XMarkIcon className="h-5 w-5" /></button>
+        <div className="text-lg font-semibold mb-2">Rev Up Part</div>
+        <div className="text-xs text-slate-500 mb-4">Upload a new file to increment the part revision and record change details.</div>
+
+        <label className="text-xs text-slate-600">Select Part</label>
+        <select className="select mb-3" value={selected ? `${selected.typePrefix}${pad3(selected.partNumber)}` : ""} onChange={e => onPick(e.target.value)}>
+          {parts.map(p => (
+            <option key={p.typePrefix + p.partNumber} value={`${p.typePrefix}${pad3(p.partNumber)}`}>
+              {p.typePrefix}{pad3(p.partNumber)} — {p.description || "(no description)"} — Rev{p.latestRev || p.rev || "?"}
+            </option>
+          ))}
+        </select>
+
+        <label className="text-xs text-slate-600">Description (what changed)</label>
+        <input className="input mb-3" value={description} onChange={e => setDescription(e.target.value)} placeholder="Short summary of changes" />
+
+        <label className="text-xs text-slate-600">Notes</label>
+        <input className="input mb-3" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes for history" />
+
+        <label className="text-xs text-slate-600">New File (.step)</label>
+        <input type="file" accept=".step,.stp" className="mb-4" onChange={e => setFile(e.target.files?.[0] || null)} />
+
+        <div className="flex items-center justify-end gap-2">
+          <button className="btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+          <button className="btn btn-primary" onClick={submit} disabled={busy}>
+            {busy ? "Uploading…" : "Apply Rev Up"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

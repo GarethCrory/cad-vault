@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -200px, rgba(15,61,145,.05), transparent 60%),
+    radial-gradient(900px 500px at -100px 40%, rgba(2,132,199,.05), transparent 60%),
+    #f7fafc;
+  color: #0f172a;
+}
+
+.badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+.badge-muted { @apply bg-slate-100 text-slate-700; }
+.badge-green { @apply bg-green-100 text-green-700; }
+.badge-blue  { @apply bg-blue-100 text-blue-700; }
+.card { @apply bg-white shadow-card rounded-2xl border border-slate-200; }
+.btn  { @apply inline-flex items-center gap-2 rounded-xl bg-ink text-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:opacity-95; }
+.btn-ghost { @apply inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100; }
+.input { @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500; }
+.select { @apply input pr-8; }
+.table { @apply min-w-full divide-y divide-slate-200; }
+.th { @apply px-4 py-2 text-left text-xs font-semibold text-slate-600; }
+.td { @apply px-4 py-3 text-sm text-slate-800; }
+
+.icon-btn { @apply p-2 rounded-md hover:bg-slate-100 disabled:opacity-50; }
+
+.icon-btn { @apply p-2 rounded-md hover:bg-slate-100 disabled:opacity-50; }

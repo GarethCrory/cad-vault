@@ -73,6 +73,14 @@ export function readProjectMetaSync(projectNumber, projectName) {
 export async function renameProjectDirectory(projectNumber, oldProjectName, newProjectName) {
   const from = projectPath(projectNumber, oldProjectName);
   const to = projectPath(projectNumber, newProjectName);
+  const fromExists = fs.existsSync(from);
+  const toExists = fs.existsSync(to);
+  if (!fromExists) {
+    if (!toExists) {
+      await ensureProjectScaffold(projectNumber, newProjectName);
+    }
+    return { projectRoot: to };
+  }
   await fsp.rename(from, to);
   return { projectRoot: to };
 }

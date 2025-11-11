@@ -1,5 +1,5 @@
 const BASE = ""; // same-origin for Cloudflare Pages Functions
-export const API_BASE = BASE;
+export const API_BASE = ""; const BASE = API_BASE;
 
 async function jpost(path, body){
   const r = await fetch(BASE + path, {

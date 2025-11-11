@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createProject, deleteProject as apiDeleteProject, listProjects, updateProjectMeta, renameProject, reorderProjects } from "../api.js";
 import { CLIENTS_KEY, getSavedClients, mergeClientRecords, setSavedClients as persistSavedClients, upsertClient } from "../lib/clientStore.js";

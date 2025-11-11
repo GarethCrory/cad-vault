@@ -31,7 +31,7 @@ export default function AddFileModal({ project, onClose, onSaved }) {
       body.append("description", desc || "");
       body.append("notes", notes || "Manual");
 
-      const res = await fetch("http://localhost:4000/api/file/revise", { method: "POST", body });
+      const res = await fetch("/api/file/revise", { method: "POST", body });
       if (!res.ok) {
         const t = await res.text();
         throw new Error(t || `Upload failed: ${res.status}`);

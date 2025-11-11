@@ -59,7 +59,7 @@ export async function scanProject(projectNumber, projectName){
 }
 
 export async function history({ projectNumber, projectName, typePrefix, partNumber }) {
-  const r = await fetch("http://localhost:4000/api/part/history", {
+  const r = await fetch("/api/part/history", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ projectNumber, projectName, typePrefix, partNumber })

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { listProjects, updateProjectMeta } from "../api.js";
 import { BuildingOfficeIcon, EnvelopeIcon, PhoneIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { CLIENTS_KEY, deleteClient as removeClient, getSavedClients, mergeClientRecords, setSavedClients as persistSavedClients, upsertClient } from "../lib/clientStore.js";

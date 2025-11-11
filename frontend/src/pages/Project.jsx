@@ -1427,7 +1427,7 @@ function AddFileModal({ project: projectInfo, defaultType="P", defaultPartNumber
       fd.append("description", description||"");
       fd.append("notes", note||"Added via UI");
 
-      const r = await fetch("http://localhost:4000/api/file/revise", { method:"POST", body: fd });
+      const r = await fetch("/api/file/revise", { method:"POST", body: fd });
       const text = await r.text();
       let body;
       try { body = JSON.parse(text); } catch(e){ body = text; }

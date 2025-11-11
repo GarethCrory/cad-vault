@@ -1,4 +1,4 @@
-const BASE = "http://localhost:4000";
+const BASE = "";
 export const API_BASE = BASE;
 
 async function jpost(path, body){

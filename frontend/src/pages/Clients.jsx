@@ -33,17 +33,16 @@ export default function Clients(){
   const [clientOrder, setClientOrder] = useState(() => readClientOrder());
   const [draggingClient, setDraggingClient] = useState(null);
 
-  useEffect(() => {
-    async function load(){
-      try{
-        const res = await listProjects();
-        setProjects(res.projects || []);
-      }catch{
-        setProjects([]);
-      }
+  const loadProjects = useCallback(async () => {
+    try{
+      const res = await listProjects();
+      setProjects(res.projects || []);
+    }catch{
+      setProjects([]);
     }
-    load();
   }, []);
+
+  useEffect(() => { loadProjects(); }, [loadProjects]);
 
   useEffect(() => {
     persistSavedClients(savedClients);

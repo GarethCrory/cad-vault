@@ -1,30 +1,11 @@
-const PROD_BASE = "https://cad-vault.fly.dev";
-const DEV_BASE = "http://localhost:4000";
-const STORAGE_KEY = "cadVault.apiBase";
-
-function readWindowBase(){
-  if (typeof window === "undefined") return null;
-  if (window.__CAD_API_BASE__) return window.__CAD_API_BASE__;
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored || null;
-  } catch {
-    return null;
-  }
-}
-
-const runtimeBase =
-  readWindowBase() ||
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE) ||
-  (typeof import.meta !== "undefined" && import.meta.env?.DEV ? DEV_BASE : PROD_BASE);
-
-export const API_BASE = runtimeBase;
+const BASE = ""; // same-origin for Cloudflare Pages Functions
+export const API_BASE = BASE;
 
 async function jpost(path, body){
   const r = await fetch(BASE + path, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body||{})
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {})
   });
   if(!r.ok){
     const t = await r.text().catch(()=> "");
@@ -34,7 +15,7 @@ async function jpost(path, body){
 }
 
 export async function listProjects(){
-  return jpost("/api/projects/list",{});
+  return jpost("/api/projects/list", {});
 }
 
 export async function createProject(payload){
@@ -74,7 +55,7 @@ export async function reorderProjects(order){
 }
 
 export async function scanProject(projectNumber, projectName){
-  return jpost("/api/project/scan",{ projectNumber, projectName });
+  return jpost("/api/project/scan", { projectNumber, projectName });
 }
 
 export async function history({ projectNumber, projectName, typePrefix, partNumber }) {
@@ -111,17 +92,9 @@ export async function reviseUpload({ file, projectNumber, projectName, typePrefi
   return r.json();
 }
 
-export async function bomGet(body){
-  return jpost("/api/bom/get", body);
-}
-
-export async function bomUpsert(body){
-  return jpost("/api/bom/upsert", body);
-}
-
-export async function bomTree(body){
-  return jpost("/api/bom/tree", body);
-}
+export async function bomGet(body){ return jpost("/api/bom/get", body); }
+export async function bomUpsert(body){ return jpost("/api/bom/upsert", body); }
+export async function bomTree(body){ return jpost("/api/bom/tree", body); }
 
 export async function deletePart(body){
   try{
@@ -134,21 +107,14 @@ export async function deletePart(body){
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...(body || {}), action: "delete" })
       });
-      if (res.ok) {
-        return res.json();
-      }
+      if (res.ok) return res.json();
     }
     throw err;
   }
 }
 
-export async function listAttachments(payload){
-  return jpost("/api/attachment/list", payload);
-}
-
-export async function deleteAttachment(payload){
-  return jpost("/api/attachment/delete", payload);
-}
+export async function listAttachments(payload){ return jpost("/api/attachment/list", payload); }
+export async function deleteAttachment(payload){ return jpost("/api/attachment/delete", payload); }
 
 export async function uploadAttachments({ projectNumber, projectName, typePrefix, partNumber, files, autoDetect = false }) {
   const form = new FormData();

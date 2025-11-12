@@ -10,11 +10,14 @@ export const onRequestPost = async ({ request, env }) => {
 
   // load current docs
   const partsDoc = await readJSON(env, paths.parts(pk), { items: [] });
-  const items = Array.isArray(partsDoc.items)
-    ? partsDoc.items
-    : Array.isArray(partsDoc.parts)
-      ? partsDoc.parts
-      : [];
+  const normalizeCollection = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === "object") return Object.values(value);
+    return [];
+  };
+  const items = normalizeCollection(partsDoc.items).length
+    ? normalizeCollection(partsDoc.items)
+    : normalizeCollection(partsDoc.parts);
   const parts = items.map(normalizePart);
 
   // persist latest count to meta so list shows correctly

@@ -908,15 +908,15 @@ function PartRow({ p, projectNumber, projectName, onEdit, onHistory, onRevUp, on
   const linkEnabled = isAssembly || canLinkToAssembly;
   return (
     <tr>
-      <td className="td text-sm py-2 leading-tight"><PartTypeBadge t={p.typePrefix} /></td>
-      <td className="td text-sm py-2 leading-tight">
+      <td className="td text-sm py-2 leading-tight" data-label="Type"><PartTypeBadge t={p.typePrefix} /></td>
+      <td className="td text-sm py-2 leading-tight" data-label="Part #">
         <PartNumberCell
           typePrefix={p.typePrefix}
           partNumber={p.partNumber}
           tooltip={latestFile || "No source file"}
         />
       </td>
-      <td className="td text-sm py-2 leading-tight">
+      <td className="td text-sm py-2 leading-tight" data-label="Description">
         <div className="flex flex-col gap-1 max-w-[40ch]">
           <div className="flex items-center gap-2 truncate">
             <span className="truncate">{desc}</span>
@@ -948,13 +948,13 @@ function PartRow({ p, projectNumber, projectName, onEdit, onHistory, onRevUp, on
           )}
         </div>
       </td>
-      <td className="td text-sm py-2 leading-tight"><span className="chip chip-step">STEP</span></td>
-      <td className="td text-sm py-2 leading-tight">
+      <td className="td text-sm py-2 leading-tight" data-label="File"><span className="chip chip-step">STEP</span></td>
+      <td className="td text-sm py-2 leading-tight" data-label="Rev">
         {revLabel ? <span className="chip chip-rev">{revLabel}</span> : <span className="text-slate-400">—</span>}
       </td>
-      <td className="td text-sm py-2 leading-tight text-slate-500">Manual</td>
-      <td className="td text-sm py-2 leading-tight"><span className="badge badge-muted">Manual</span></td>
-      <td className="td text-sm py-2 leading-tight cell-actions">
+      <td className="td text-sm py-2 leading-tight text-slate-500" data-label="Notes">Manual</td>
+      <td className="td text-sm py-2 leading-tight" data-label="Source"><span className="badge badge-muted">Manual</span></td>
+      <td className="td text-sm py-2 leading-tight cell-actions" data-label="Actions">
         <div className="flex items-center justify-end gap-2 whitespace-nowrap">
           <button
             onClick={() => (isAssembly ? onLink?.(p) : onParentLink?.(p))}

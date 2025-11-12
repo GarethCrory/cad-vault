@@ -801,35 +801,6 @@ body {
 .tile {
   padding: 1rem;
 }
-.project-hero {
-  padding: 16px;
-}
-.project-hero .project-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
-}
-.project-hero .stat-card {
-  padding: 14px;
-  border-radius: 14px;
-  background: linear-gradient(145deg, #ffffff, #f6f8ff);
-  border: 1px solid #dfe7f4;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-}
-.project-hero .stat-card .label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #8b93a6;
-}
-.project-hero .stat-card .value {
-  font-size: 26px;
-  font-weight: 700;
-  color: #0f172a;
-}
-.project-hero .stat-card .value.accent {
-  color: #f97316;
-}
 
 .stat-card {
   background: var(--mono-panel-soft);
@@ -915,23 +886,7 @@ button svg {
   background: var(--mono-pill);
   color: var(--mono-ink);
 }
-.badge-green {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: lowercase;
-  letter-spacing: 0.04em;
-  color: rgb(22 101 52);
-  background: rgba(220, 252, 231, 0.95);
-  border: 1px solid rgba(22, 101, 52, 0.2);
-  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.25), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
-  transition-property: color, background-color, border-color, box-shadow;
-  transition-duration: 150ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
+.badge-green,
 .badge-blue,
 .badge-muted {
   background: var(--mono-pill);
@@ -1063,7 +1018,7 @@ button svg {
 .seg-control__btn.is-active {
   filter: none;
 }
-.seg-control--outline .seg-control__btn.is-active {
+.seg-control__btn.is-active.is-outline {
   background: rgba(249, 115, 22, 0.12);
   color: var(--vault-accent);
   border-color: var(--vault-accent);

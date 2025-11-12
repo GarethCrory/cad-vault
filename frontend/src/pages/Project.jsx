@@ -481,21 +481,30 @@ export default function Project(){
           </Link>
         </div>
 
-        <div className="card p-4 lg:p-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] items-center">
-          <div className="flex items-start gap-3">
-            <div className="h-12 w-12 rounded-lg bg-ink text-white grid place-items-center text-xl">📁</div>
+        <div className="card p-6 grid gap-6 lg:grid-cols-2 items-start">
+          <div className="flex items-start gap-4">
+            <div className="h-14 w-14 rounded-xl bg-ink text-white grid place-items-center text-2xl">📁</div>
             <div>
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <span className="text-xs text-slate-500">{projectNumber}</span>
-                <span className="badge badge-green transition-colors text-green-800 shadow">active</span>
+                <span className="badge badge-green">active</span>
               </div>
-              <h2 className="text-2xl font-extrabold tracking-tight">{projectName}</h2>
+              <h2 className="text-3xl font-extrabold tracking-tight">{projectName}</h2>
               <div className="text-xs text-slate-500 mt-1">Client release management</div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 w-full lg:w-auto lg:items-end">
+          <div className="flex flex-col gap-4 w-full lg:w-auto lg:items-end">
             <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setRevUpOpen(true)}
+                disabled={releaseLoading}
+                title="Rev up"
+              >
+                <BoltIcon className="h-6 w-6" />
+                Rev Up
+              </button>
               <button className="btn btn-primary" onClick={openAdd}>
                 <ArrowUpTrayIcon className="h-6 w-6" />
                 Add File
@@ -505,14 +514,14 @@ export default function Project(){
               </button>
             </div>
 
-            <div className="project-stats w-full lg:w-auto">
-              <div className="stat-card">
-                <div className="label">Total Parts</div>
-                <div className="value">{parts.length}</div>
+            <div className="project-stats grid grid-cols-2 gap-4 w-full lg:w-auto">
+              <div className="stat-card p-4 rounded-lg text-center">
+                <div className="text-sm text-slate-500">Total Parts</div>
+                <div className="text-2xl font-bold">{parts.length}</div>
               </div>
-              <div className="stat-card">
-                <div className="label">Next Part #</div>
-                <div className="value accent">{nextPartNumber}</div>
+              <div className="stat-card p-4 rounded-lg text-center">
+                <div className="text-sm text-slate-500">Next Part #</div>
+                <div className="text-2xl font-bold text-orange-500">{nextPartNumber}</div>
               </div>
             </div>
           </div>

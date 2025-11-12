@@ -174,7 +174,7 @@ export default function Clients(){
   }
 
   return (
-    <div className="page-container compact">
+    <div className="page-container compact clients-page">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -253,7 +253,7 @@ function ClientCard({ client, onEdit, onDelete, canDelete, dragHandlers = {}, is
   const notes = (client.notes || "").trim();
   return (
     <div
-      className={`card p-6 flex flex-col h-full relative group cursor-grab transition-opacity ${isDragging ? "ring-2 ring-indigo-300 bg-slate-50 opacity-0" : "opacity-100"}`}
+      className={`card client-card p-6 flex flex-col h-full relative group cursor-grab transition-all ${isDragging ? "ring-2 ring-indigo-300 bg-slate-50 opacity-0" : "opacity-100"}`}
       draggable={dragHandlers.draggable}
       onDragStart={dragHandlers.onDragStart}
       onDragOver={dragHandlers.onDragOver}

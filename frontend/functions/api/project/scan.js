@@ -12,32 +12,36 @@ export const onRequestPost = async ({ request, env }) => {
 
   // load current docs
   const partsDoc = await readJSON(env, `data/projects/${projectDir}/parts.json`, { items: [] });
-  const normalizeCollection = (value, weight = 0) => {
-    if (!value) return [];
-    if (Array.isArray(value)) {
-      return value.map((entry) => ({ ...entry, __weight: weight }));
+
+  const looksLikePart = (entry = {}) => {
+    if (!entry || typeof entry !== "object") return false;
+    return ["typePrefix", "t", "type", "partNumber", "n", "latestFile", "latestRev", "code"].some((key) =>
+      Object.prototype.hasOwnProperty.call(entry, key)
+    );
+  };
+
+  const extractParts = (node, weight = 0) => {
+    if (!node) return [];
+    if (Array.isArray(node)) {
+      return node.flatMap((item) => extractParts(item, weight));
     }
-    if (typeof value === "object") {
-      const keys = Object.keys(value);
-      return keys.map((key) => {
-        const entry = value[key];
-        if (entry && typeof entry === "object") {
-          return { id: entry.id || key, ...entry, __weight: weight };
-        }
-        return { id: key, value: entry, n: Number(entry) || 0, __weight: weight };
+    if (typeof node === "object") {
+      if (looksLikePart(node)) {
+        return [{ ...node, __weight: weight }];
+      }
+      let results = [];
+      if (node.items) results = results.concat(extractParts(node.items, weight + 1));
+      if (node.parts) results = results.concat(extractParts(node.parts, weight + 1));
+      Object.entries(node).forEach(([key, value]) => {
+        if (key === "items" || key === "parts") return;
+        results = results.concat(extractParts(value, weight + 1));
       });
-    }
-    if (typeof value === "number" || typeof value === "string") {
-      return [{ value, n: Number(value) || 0, __weight: weight }];
+      return results;
     }
     return [];
   };
 
-  const sources = [
-    normalizeCollection(partsDoc.items, 3),
-    normalizeCollection(partsDoc.parts, 2),
-    normalizeCollection(partsDoc, 1)
-  ].flat();
+  const sources = extractParts(partsDoc);
 
   const keyed = new Map();
   const resolveKey = (raw = {}) => {

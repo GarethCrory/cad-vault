@@ -5,6 +5,8 @@ import { Cog6ToothIcon, UserGroupIcon, HomeIcon } from "@heroicons/react/24/outl
 export default function App(){
   const navClass = ({ isActive }) =>
     `sidebar-link ${isActive ? "sidebar-link-active" : ""}`;
+  const buildHash = (typeof __BUILD__ !== "undefined" && __BUILD__) ? __BUILD__ : "dev";
+  const buildLabel = (buildHash || "dev").slice(0,7);
 
   return (
     <div className="app-shell">
@@ -30,7 +32,9 @@ export default function App(){
             Settings
           </NavLink>
         </nav>
-        <div className="px-5 py-6 mt-auto text-xs text-slate-500">Version 1.0.0<br/>CAD Project Management</div>
+        <div className="px-5 py-6 mt-auto text-xs text-slate-500">
+          Version 1.0.0 • {buildLabel}<br/>CAD Project Management
+        </div>
       </aside>
 
       <main className="main-content">

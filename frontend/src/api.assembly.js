@@ -1,4 +1,6 @@
-const BASE = "http://localhost:4000";
+import { API_BASE } from "./api.js";
+
+const BASE = API_BASE || "";
 
 async function postJSON(path, payload) {
   const res = await fetch(`${BASE}${path}`, {

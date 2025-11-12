@@ -174,7 +174,7 @@ export default function Clients(){
   }
 
   return (
-    <div className="page-container compact clients-page">
+    <div className="page-container compact">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

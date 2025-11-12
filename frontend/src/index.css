@@ -915,7 +915,20 @@ button svg {
   background: var(--mono-pill);
   color: var(--mono-ink);
 }
-.badge-green,
+.badge-green {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  color: #166534;
+  background: #dcfce7;
+  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.25);
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
 .badge-blue,
 .badge-muted {
   background: var(--mono-pill);

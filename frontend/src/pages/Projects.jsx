@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createProject, deleteProject as apiDeleteProject, listProjects, updateProjectMeta, renameProject, reorderProjects } from "../api.js";
-import { CLIENTS_KEY, getSavedClients, mergeClientRecords, setSavedClients as persistSavedClients, upsertClient } from "../lib/clientStore.js";
+import { fetchClients, mergeClientRecords, upsertClient } from "../lib/clientStore.js";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 function projectKey(project, fallbackIndex = 0){
@@ -41,7 +41,7 @@ export default function Projects(){
     if (typeof window === "undefined") return "";
     return localStorage.getItem("cadVault.nextProjectNumber") || "";
   });
-  const [savedClientsState, setSavedClientsState] = useState(() => getSavedClients());
+  const [savedClientsState, setSavedClientsState] = useState([]);
   const [draggingProjectId, setDraggingProjectId] = useState(null);
   const [orderSaving, setOrderSaving] = useState(false);
   const [orderStatus, setOrderStatus] = useState("");
@@ -76,10 +76,6 @@ export default function Projects(){
   }, []);
 
   useEffect(() => {
-    persistSavedClients(savedClientsState);
-  }, [savedClientsState]);
-
-  useEffect(() => {
     projectsRef.current = projects;
   }, [projects]);
 
@@ -91,14 +87,12 @@ export default function Projects(){
     };
   }, []);
 
-  useEffect(() => {
-    function handleClientStorage(e){
-      if (e && e.key && e.key !== CLIENTS_KEY) return;
-      setSavedClientsState(getSavedClients());
-    }
-    window.addEventListener("storage", handleClientStorage);
-    return () => window.removeEventListener("storage", handleClientStorage);
+  const loadClients = useCallback(async () => {
+    const list = await fetchClients().catch(() => []);
+    setSavedClientsState(list);
   }, []);
+
+  useEffect(() => { loadClients(); }, [loadClients]);
 
   const filtered = projects.filter(p => {
     const hay = `${p.projectName||""} ${p.projectNumber||""} ${p.client||""}`.toLowerCase();
@@ -150,10 +144,10 @@ export default function Projects(){
     }
   }, [loadProjects]);
 
-  function handleClientUpsert(data, options){
-    const next = upsertClient(data, options);
-    setSavedClientsState(next);
-  }
+  const handleClientUpsert = useCallback(async (data, options) => {
+    await upsertClient(data, options);
+    await loadClients();
+  }, [loadClients]);
 
   function handleProjectDragStart(e, id){
     setDraggingProjectId(id);

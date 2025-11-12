@@ -22,6 +22,8 @@ body{ background:var(--vault-bg)!important; }
   background:var(--vault-card)!important;
   border:1px solid var(--vault-border)!important;
   border-radius:16px!important;
+  box-shadow:none!important;
+  transition:none!important;
 }
 
 /* Project tiles should not animate/pop */
@@ -32,6 +34,54 @@ body{ background:var(--vault-bg)!important; }
 .tile:hover {
   transform: none !important;
   box-shadow: none !important;
+}
+
+.card, .client-card {
+  box-shadow: none !important;
+  transition: none !important;
+}
+.card:hover,
+.client-card,
+.client-card:hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+button,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.outline-btn,
+.ghost-btn,
+.icon-btn,
+.action-btn,
+.tab,
+.tab-btn,
+.tab-button,
+.tabs .tab {
+  transition: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+button:hover,
+.btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-ghost:hover,
+.outline-btn:hover,
+.ghost-btn:hover,
+.icon-btn:hover,
+.action-btn:hover,
+.tab:hover,
+.tab-btn:hover,
+.tab-button:hover,
+.tabs .tab:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 /* All generic buttons → rounded rectangles with outline style */

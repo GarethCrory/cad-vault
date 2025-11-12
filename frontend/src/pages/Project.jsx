@@ -354,12 +354,12 @@ export default function Project(){
   async function onSaveEdit(form){
     try{
       await editPart({
-        projectNumber, projectName,
+        projectNumber,
+        projectName,
         typePrefix: form.typePrefix,
         partNumber: form.partNumber,
-        newTypePrefix: form.newTypePrefix,
-        newDescription: form.newDescription,
-        note: form.note||""
+        description: form.description,
+        notes: form.notes || ""
       });
       setEditing(null);
       await load();
@@ -1058,9 +1058,9 @@ function EditModal({p, project: projectInfo, assemblies = [], parts = [], childL
       await onSave({
         typePrefix: p.typePrefix,
         partNumber: p.partNumber,
-        newTypePrefix: type,
-        newDescription: desc,
-        note
+        nextTypePrefix: type,
+        description: desc,
+        notes: note
       });
     }catch(err){
       setSaveError(err.message || "Unable to save changes");

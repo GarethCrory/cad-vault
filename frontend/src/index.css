@@ -649,9 +649,10 @@ button:active,
 }
 
 .sidebar-overlay {
+  display: none;
   position: fixed;
   inset: 0;
-  background: rgba(15,23,42,0.45);
+  background: rgba(15,23,42,0.35);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -735,6 +736,7 @@ button:active,
     padding: 72px 16px 24px;
   }
   .app-shell.nav-open .sidebar-overlay {
+    display: block;
     opacity: 1;
     pointer-events: auto;
   }

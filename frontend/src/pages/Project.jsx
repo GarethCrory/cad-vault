@@ -495,9 +495,9 @@ export default function Project(){
           </div>
 
           <div className="flex flex-col gap-4 w-full lg:w-auto lg:items-end">
-            <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
+            <div className="flex flex-wrap items-center gap-3 justify-start lg:justify-end project-actions">
               <button 
-                className="btn btn-secondary"
+                className="btn btn-ghost"
                 onClick={() => setRevUpOpen(true)}
                 disabled={releaseLoading}
                 title="Rev up"
@@ -505,9 +505,9 @@ export default function Project(){
                 <BoltIcon className="h-6 w-6" />
                 Rev Up
               </button>
-              <button className="btn btn-primary" onClick={openAdd}>
+              <button className="btn btn-cta" onClick={openAdd}>
                 <ArrowUpTrayIcon className="h-6 w-6" />
-                Add File
+                Upload Files
               </button>
               <button className="btn btn-secondary" onClick={() => setBulkAttachOpen(true)}>
                 Attach PDFs

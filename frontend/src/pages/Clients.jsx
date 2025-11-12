@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { listProjects, updateProjectMeta } from "../api.js";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { listProjects, updateProjectMeta, getClientOrder, saveClientOrderRemote } from "../api.js";
 import { BuildingOfficeIcon, EnvelopeIcon, PhoneIcon, PencilSquareIcon, TrashIcon, UserIcon as ContactIcon } from "@heroicons/react/24/outline";
 import { fetchClients, mergeClientRecords, removeClient, upsertClient } from "../lib/clientStore.js";
 
@@ -24,6 +24,14 @@ function writeClientOrder(order = []){
   }
 }
 
+function arraysEqual(a = [], b = []){
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++){
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 export default function Clients(){
   const [projects, setProjects] = useState([]);
   const [savedClients, setSavedClients] = useState([]);
@@ -32,6 +40,10 @@ export default function Clients(){
   const [editingClient, setEditingClient] = useState(null);
   const [clientOrder, setClientOrder] = useState(() => readClientOrder());
   const [draggingClient, setDraggingClient] = useState(null);
+  const clientOrderRef = useRef(clientOrder);
+  const lastPersistedOrder = useRef(clientOrder);
+  const orderReadyRef = useRef(false);
+  const draggingOrderRef = useRef(false);
 
   const loadProjects = useCallback(async () => {
     try{
@@ -51,9 +63,49 @@ export default function Clients(){
 
   useEffect(() => { loadClients(); }, [loadClients]);
 
+  const persistClientOrder = useCallback(async (orderList) => {
+    const payload = Array.from(orderList || []);
+    writeClientOrder(payload);
+    if (!orderReadyRef.current) return;
+    try{
+      await saveClientOrderRemote(payload);
+      lastPersistedOrder.current = payload;
+    }catch(err){
+      console.warn("Unable to persist client order", err);
+    }
+  }, []);
+
+  const loadClientOrderRemote = useCallback(async () => {
+    const fallback = readClientOrder();
+    try{
+      const res = await getClientOrder();
+      const remote = Array.isArray(res.order) ? res.order : [];
+      if (remote.length) {
+        setClientOrder(remote);
+        clientOrderRef.current = remote;
+        lastPersistedOrder.current = remote;
+        writeClientOrder(remote);
+      } else if (fallback.length) {
+        setClientOrder(fallback);
+      }
+    }catch(err){
+      if (fallback.length) {
+        setClientOrder(fallback);
+      }
+    }finally{
+      orderReadyRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => { loadClientOrderRemote(); }, [loadClientOrderRemote]);
+
   useEffect(() => {
-    writeClientOrder(clientOrder);
-  }, [clientOrder]);
+    clientOrderRef.current = clientOrder;
+    if (!orderReadyRef.current) return;
+    if (draggingOrderRef.current) return;
+    if (arraysEqual(lastPersistedOrder.current, clientOrder)) return;
+    persistClientOrder(clientOrder);
+  }, [clientOrder, persistClientOrder]);
 
   const baseClients = useMemo(() => mergeClientRecords(projects, savedClients), [projects, savedClients]);
 
@@ -140,6 +192,7 @@ export default function Clients(){
 
   function handleClientDragStart(e, name){
     setDraggingClient(name);
+    draggingOrderRef.current = true;
     if (e?.dataTransfer) {
       e.dataTransfer.effectAllowed = "move";
       try { e.dataTransfer.setData("text/plain", name); } catch {}
@@ -167,10 +220,16 @@ export default function Clients(){
   function handleClientDrop(e){
     if (e?.preventDefault) e.preventDefault();
     setDraggingClient(null);
+    draggingOrderRef.current = false;
+    persistClientOrder(clientOrderRef.current);
   }
 
   function handleClientDragEnd(){
     setDraggingClient(null);
+    if (draggingOrderRef.current) {
+      draggingOrderRef.current = false;
+      persistClientOrder(clientOrderRef.current);
+    }
   }
 
   return (

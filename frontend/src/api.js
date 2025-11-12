@@ -142,3 +142,16 @@ export async function saveClient(payload){
 export async function deleteClientRemote(payload){
   return jpost("/api/clients/delete", payload);
 }
+
+export async function getClientOrder(){
+  const res = await fetch(BASE + "/api/clients/order", { method: "GET" });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Unable to load client order");
+  }
+  return res.json();
+}
+
+export async function saveClientOrderRemote(order = []){
+  return jpost("/api/clients/order", { order });
+}

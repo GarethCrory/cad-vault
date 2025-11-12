@@ -17,17 +17,21 @@ async function handle({ env }) {
       }
     }
 
-    const enhanced = [];
-    for (const project of projects) {
-      const partCount = await resolvePartCount(env, project).catch(() => project.partCount || 0);
-      enhanced.push({ ...project, partCount });
-    }
-
+    const enhanced = await Promise.all(projects.map(project => enhanceProject(env, project)));
     return json({ projects: enhanced });
   } catch (err) {
     // Never block the UI — return an empty list with the error for visibility
     return json({ projects: [], error: String(err) });
   }
+}
+
+async function enhanceProject(env, project) {
+  const partCount = await resolvePartCount(env, project).catch(() => project.partCount || 0);
+  let nextPartNumber = project.nextPartNumber || "001";
+  if (!nextPartNumber) {
+    nextPartNumber = await resolveNextPartNumber(env, project).catch(() => "001");
+  }
+  return { ...project, partCount, nextPartNumber };
 }
 
 async function resolvePartCount(env, project) {
@@ -57,6 +61,22 @@ async function readPartsCount(env, dirKey) {
     return 0;
   } catch {
     return 0;
+  }
+}
+
+async function resolveNextPartNumber(env, project) {
+  const pk = projectKey(project?.projectNumber, project?.projectName);
+  const path = `data/projects/${pk}/parts.json`;
+  const obj = await env.UPLOADS_BUCKET.get(path);
+  if (!obj) return "001";
+  try {
+    const text = await obj.text();
+    const data = JSON.parse(text || "{}");
+    const parts = Array.isArray(data.items) ? data.items : Array.isArray(data.parts) ? data.parts : [];
+    const max = parts.reduce((acc, part) => Math.max(acc, Number(part?.n ?? part?.partNumber) || 0), 0);
+    return String(max + 1).padStart(3, "0");
+  } catch {
+    return "001";
   }
 }
 

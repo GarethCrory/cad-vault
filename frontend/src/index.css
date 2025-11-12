@@ -67,9 +67,7 @@ body, html {
   border: 1px solid var(--vault-border);
   border-radius: 1rem;
   padding: 1rem;
-  transition: all 0.2s ease;
 }
-.tile:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
 
 
 body, html {

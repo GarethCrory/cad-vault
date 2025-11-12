@@ -247,6 +247,10 @@ export default function Clients(){
 function ClientCard({ client, onEdit, onDelete, canDelete, dragHandlers = {}, isDragging = false }){
   const projectCount = client.projects?.length || 0;
   const updatedText = client.updatedAt ? new Date(client.updatedAt).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "";
+  const contact = (client.contactPerson || "").trim();
+  const email = (client.email || "").trim();
+  const phone = (client.phone || "").trim();
+  const notes = (client.notes || "").trim();
   return (
     <div
       className={`card p-6 flex flex-col h-full relative group cursor-grab transition-opacity ${isDragging ? "ring-2 ring-indigo-300 bg-slate-50 opacity-0" : "opacity-100"}`}
@@ -272,16 +276,34 @@ function ClientCard({ client, onEdit, onDelete, canDelete, dragHandlers = {}, is
         <div className="h-12 w-12 rounded-2xl bg-blue-100 text-blue-700 grid place-items-center">
           <BuildingOfficeIcon className="h-6 w-6" />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-3 flex-1">
           <div>
             <div className="text-lg font-semibold">{client.name}</div>
-            {client.contactPerson && <div className="text-sm text-slate-500">{client.contactPerson}</div>}
           </div>
-          <div className="space-y-1 text-sm text-slate-600">
-            {client.email && <div className="flex items-center gap-2"><EnvelopeIcon className="h-4 w-4" />{client.email}</div>}
-            {client.phone && <div className="flex items-center gap-2"><PhoneIcon className="h-4 w-4" />{client.phone}</div>}
+          <div className="space-y-2 text-sm text-slate-600">
+            <div className="flex items-center gap-3">
+              <UserIcon className="h-4 w-4 text-slate-400" />
+              <div>
+                <div className="text-xs uppercase tracking-wide text-slate-400">Contact</div>
+                <div>{contact || "Not set"}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <EnvelopeIcon className="h-4 w-4 text-slate-400" />
+              <div>
+                <div className="text-xs uppercase tracking-wide text-slate-400">Email</div>
+                <div className="break-all">{email || "Not provided"}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <PhoneIcon className="h-4 w-4 text-slate-400" />
+              <div>
+                <div className="text-xs uppercase tracking-wide text-slate-400">Phone</div>
+                <div>{phone || "Not provided"}</div>
+              </div>
+            </div>
           </div>
-          {client.notes && <div className="text-xs text-slate-500 mt-2">{client.notes}</div>}
+          {notes && <div className="text-xs text-slate-500 bg-slate-100 rounded-lg px-3 py-2">{notes}</div>}
         </div>
       </div>
       <div className="mt-4 flex items-center justify-between text-sm text-slate-500">

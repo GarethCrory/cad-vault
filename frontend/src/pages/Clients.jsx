@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { listProjects, updateProjectMeta } from "../api.js";
-import { BuildingOfficeIcon, EnvelopeIcon, PhoneIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { BuildingOfficeIcon, EnvelopeIcon, PhoneIcon, PencilSquareIcon, TrashIcon, UserIcon as ContactIcon } from "@heroicons/react/24/outline";
 import { fetchClients, mergeClientRecords, removeClient, upsertClient } from "../lib/clientStore.js";
 
 const CLIENT_ORDER_STORE = "cadVault.clientOrder.v1";
@@ -282,7 +282,7 @@ function ClientCard({ client, onEdit, onDelete, canDelete, dragHandlers = {}, is
           </div>
           <div className="space-y-2 text-sm text-slate-600">
             <div className="flex items-center gap-3">
-              <UserIcon className="h-4 w-4 text-slate-400" />
+              <ContactIcon className="h-4 w-4 text-slate-400" />
               <div>
                 <div className="text-xs uppercase tracking-wide text-slate-400">Contact</div>
                 <div>{contact || "Not set"}</div>
@@ -348,7 +348,7 @@ function NewClientModal({ onClose, onSave, initialClient = null, mode = "add" })
       <div className="card w-full max-w-lg p-6 relative">
         <button className="btn-ghost absolute right-4 top-4 text-sm" onClick={onClose}>✕</button>
         <h2 className="text-2xl font-extrabold mb-4 flex items-center gap-2">
-          <UserIcon />
+          <ContactIcon className="h-6 w-6" />
           {isEdit ? "Edit Client" : "Add New Client"}
         </h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -382,13 +382,5 @@ function NewClientModal({ onClose, onSave, initialClient = null, mode = "add" })
         </form>
       </div>
     </div>
-  );
-}
-
-function UserIcon(){
-  return (
-    <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a8.25 8.25 0 0115 0"/>
-    </svg>
   );
 }

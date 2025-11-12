@@ -1,55 +1,26 @@
-const KEY = "cadVault.savedClients";
+import { listClients, saveClient, deleteClientRemote } from "../api";
 
-export function getSavedClients(){
-  if (typeof window === "undefined") return [];
+let cache = [];
+
+export async function fetchClients(){
   try{
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : [];
+    const res = await listClients();
+    cache = res.clients || [];
   }catch{
-    return [];
+    cache = [];
   }
+  return cache;
 }
 
-export function setSavedClients(list){
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(KEY, JSON.stringify(list));
+export async function upsertClient(record, options = {}){
+  await saveClient({ client: record, originalName: options.originalName });
+  return fetchClients();
 }
 
-export function upsertClient(record, { originalName } = {}){
-  const list = getSavedClients();
-  let idx = -1;
-  if (record.id) {
-    idx = list.findIndex(c => c.id === record.id);
-  }
-  if (idx === -1 && originalName) {
-    idx = list.findIndex(c => (c.name || "").toLowerCase() === originalName.toLowerCase());
-  }
-  if (idx === -1 && record.name) {
-    idx = list.findIndex(c => (c.name || "").toLowerCase() === record.name.toLowerCase());
-  }
-  const payload = {
-    ...list[idx],
-    ...record,
-    id: record.id || (idx >= 0 ? list[idx].id : Date.now()),
-    updatedAt: new Date().toISOString(),
-    source: "local"
-  };
-  if (idx >= 0){
-    list[idx] = payload;
-  }else{
-    list.push(payload);
-  }
-  setSavedClients(list);
-  return list;
+export async function removeClient(name){
+  await deleteClientRemote({ name });
+  return fetchClients();
 }
-
-export function deleteClient(name){
-  const list = getSavedClients().filter(c => c.name?.toLowerCase() !== name?.toLowerCase());
-  setSavedClients(list);
-  return list;
-}
-
-export const CLIENTS_KEY = KEY;
 
 export function mergeClientRecords(projects = [], savedClients = []){
   const map = new Map();
@@ -72,13 +43,13 @@ export function mergeClientRecords(projects = [], savedClients = []){
   savedClients.forEach(c => {
     const name = c.name?.trim();
     if (!name) return;
-    const existing = map.get(name) || { projects: [], source: "local" };
+    const existing = map.get(name) || { projects: [], source: "remote" };
     map.set(name, {
       ...existing,
       ...c,
       name,
       projects: existing.projects || [],
-      source: "local"
+      source: "remote"
     });
   });
   return Array.from(map.values()).sort((a,b) => a.name.localeCompare(b.name));

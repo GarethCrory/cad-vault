@@ -130,3 +130,15 @@ export async function uploadAttachments({ projectNumber, projectName, typePrefix
   }
   return res.json();
 }
+
+export async function listClients(){
+  return jpost("/api/clients/list", {});
+}
+
+export async function saveClient(payload){
+  return jpost("/api/clients/save", payload);
+}
+
+export async function deleteClientRemote(payload){
+  return jpost("/api/clients/delete", payload);
+}

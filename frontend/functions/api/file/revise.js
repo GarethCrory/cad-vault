@@ -15,6 +15,9 @@ export const onRequestPost = async ({ request, env }) => {
     const projectName = proj.projectName || form.get("projectName") || form.get("project_name");
     const typePrefix = form.get("typePrefix") || "P";
     const partNumber = form.get("partNumber");
+    const description = form.get("description") || "";
+    const notes = form.get("notes") || "";
+    const revTag = form.get("rev") || "RevA";
 
     if(!projectNumber || !projectName || !partNumber){
       return new Response(JSON.stringify({ error:"projectNumber, projectName and partNumber required"}), { status:400, headers:{ "content-type":"application/json" }});
@@ -38,15 +41,17 @@ export const onRequestPost = async ({ request, env }) => {
       part = { id, t:(typePrefix||"P").toUpperCase(), n:Number(partNumber)||0, description:"", notes:"", createdAt:now, updatedAt:now, revs:[], attachments:[], history:[] };
       parts.items.push(part);
     }
+    if (description) part.description = description;
+    if (notes) part.notes = notes;
     part.revs = part.revs || [];
-    part.revs.push({ key, name:file.name, size:file.size||null, uploadedAt: now });
+    part.revs.push({ key, name:file.name, size:file.size||null, uploadedAt: now, rev: revTag });
     part.updatedAt = now;
     part.history = part.history || [];
-    part.history.push({ ts: now, event:"revise:upload", file:file.name });
+    part.history.push({ ts: now, event:"revise:upload", file:file.name, rev: revTag, description });
 
     await writeJSON(env, partsKey, parts);
 
-    return new Response(JSON.stringify({ ok:true, key }), { headers:{ "content-type":"application/json" }});
+    return new Response(JSON.stringify({ ok:true, key, rev: revTag }), { headers:{ "content-type":"application/json" }});
   }catch(e){
     return new Response(JSON.stringify({ error:String(e?.message||e) }), { status:500, headers:{ "content-type":"application/json" }});
   }

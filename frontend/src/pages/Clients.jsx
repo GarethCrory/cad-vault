@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { listProjects, updateProjectMeta } from "../api.js";
 import { BuildingOfficeIcon, EnvelopeIcon, PhoneIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { CLIENTS_KEY, deleteClient as removeClient, getSavedClients, mergeClientRecords, setSavedClients as persistSavedClients, upsertClient } from "../lib/clientStore.js";
+import { fetchClients, mergeClientRecords, removeClient, upsertClient } from "../lib/clientStore.js";
 
 const CLIENT_ORDER_STORE = "cadVault.clientOrder.v1";
 
@@ -26,7 +26,7 @@ function writeClientOrder(order = []){
 
 export default function Clients(){
   const [projects, setProjects] = useState([]);
-  const [savedClients, setSavedClients] = useState(() => getSavedClients());
+  const [savedClients, setSavedClients] = useState([]);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
@@ -44,22 +44,16 @@ export default function Clients(){
 
   useEffect(() => { loadProjects(); }, [loadProjects]);
 
-  useEffect(() => {
-    persistSavedClients(savedClients);
-  }, [savedClients]);
+  const loadClients = useCallback(async () => {
+    const list = await fetchClients().catch(() => []);
+    setSavedClients(list);
+  }, []);
+
+  useEffect(() => { loadClients(); }, [loadClients]);
 
   useEffect(() => {
     writeClientOrder(clientOrder);
   }, [clientOrder]);
-
-  useEffect(() => {
-    function handleStorage(e){
-      if (e && e.key && e.key !== CLIENTS_KEY) return;
-      setSavedClients(getSavedClients());
-    }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
 
   const baseClients = useMemo(() => mergeClientRecords(projects, savedClients), [projects, savedClients]);
 
@@ -102,15 +96,15 @@ export default function Clients(){
   const totalClients = clientCards.length;
   const activeProjects = projects.length;
 
-  function handleAddClient(data){
-    const next = upsertClient(data);
-    setSavedClients(next);
+  async function handleAddClient(data){
+    await upsertClient(data);
+    loadClients();
   }
 
   const handleEditClient = useCallback(async (data, originalName) => {
     const targetOriginal = originalName || editingClient?.name || "";
-    const next = upsertClient(data, { originalName: targetOriginal });
-    setSavedClients(next);
+    await upsertClient(data, { originalName: targetOriginal });
+    await loadClients();
     const newName = data?.name?.trim();
     if (targetOriginal && newName && newName !== targetOriginal) {
       const affected = projects.filter(
@@ -138,10 +132,10 @@ export default function Clients(){
     }
   }, [editingClient?.name, projects, loadProjects]);
 
-  function handleDeleteClient(name){
+  async function handleDeleteClient(name){
     if(!window.confirm(`Delete ${name}? This only removes your local note.`)) return;
-    const next = removeClient(name);
-    setSavedClients(next);
+    await removeClient(name);
+    loadClients();
   }
 
   function handleClientDragStart(e, name){

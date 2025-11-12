@@ -96,7 +96,8 @@ function ReleaseTab({ project, parts = [], onPublish, assemblyChildCounts = {} }
         <div className="space-y-2">
           {parts.map(p => {
             const id = `${p.typePrefix}${pad3(p.partNumber)}`;
-            const fileLabel = p.latestFile || `${project.projectNumber}_${p.typePrefix}${pad3(p.partNumber)}_Rev${p.latestRev||"?"}.step`;
+            const revForFile = stripRevPrefix(p.latestRev || "") || "?";
+            const fileLabel = p.latestFile || `${project.projectNumber}_${p.typePrefix}${pad3(p.partNumber)}_Rev${revForFile}.step`;
             const childCount = assemblyChildCounts[id] || 0;
             return (
               <label key={id} className="flex items-start gap-4 p-4 bg-slate-50 rounded-lg">
@@ -834,6 +835,16 @@ function parseDescription(filename) {
   return match ? match[1].replace(/[-_]/g, " ").trim() : "";
 }
 
+function stripRevPrefix(value = "") {
+  if (!value) return "";
+  return String(value).trim().replace(/^rev/i, "");
+}
+
+function formatRevLabel(value = "") {
+  const plain = stripRevPrefix(value);
+  return plain ? `Rev${plain}` : "";
+}
+
 // Update PartNumberCell to show simplified part numbers
 function PartNumberCell({ typePrefix, partNumber, tooltip }) {
   const displayNumber = `${typePrefix}${String(partNumber).padStart(3,"0")}`;
@@ -873,6 +884,7 @@ function PartRow({ p, projectNumber, projectName, onEdit, onHistory, onRevUp, on
   }, [p, projectNumber, projectName]);
 
   const rev = p.latestRev || p.rev || latest || "";
+  const revLabel = formatRevLabel(rev);
   const desc = p.description || parseDescription(latestFile) || "—";
   const isAssembly = ["A","S"].includes(p.typePrefix);
   const partLabel = `${p.typePrefix}${pad3(p.partNumber)} — ${p.description || "Untitled component"}`;
@@ -922,7 +934,7 @@ function PartRow({ p, projectNumber, projectName, onEdit, onHistory, onRevUp, on
       </td>
       <td className="td text-sm py-2 leading-tight"><span className="chip chip-step">STEP</span></td>
       <td className="td text-sm py-2 leading-tight">
-        {rev ? <span className="chip chip-rev">Rev{rev}</span> : <span className="text-slate-400">—</span>}
+        {revLabel ? <span className="chip chip-rev">{revLabel}</span> : <span className="text-slate-400">—</span>}
       </td>
       <td className="td text-sm py-2 leading-tight text-slate-500">Manual</td>
       <td className="td text-sm py-2 leading-tight"><span className="badge badge-muted">Manual</span></td>
@@ -1700,7 +1712,7 @@ function RevUpModal({ parts = [], project: projectInfo, initialSelected = null, 
             >
               {parts.map(p => (
                 <option key={p.typePrefix + p.partNumber} value={`${p.typePrefix}${pad3(p.partNumber)}`}>
-                  {p.typePrefix}{pad3(p.partNumber)} — {p.description || "(no description)"} — Rev{p.latestRev || p.rev || "?"}
+                  {p.typePrefix}{pad3(p.partNumber)} — {p.description || "(no description)"} — {formatRevLabel(p.latestRev || p.rev || "?") || "Rev?"}
                 </option>
               ))}
             </select>

@@ -109,7 +109,7 @@ export default function AddComponentsModal({
           qty
         });
       }
-      onLinked?.();
+      if (onLinked) await onLinked();
       onClose?.();
       showToast?.(`${selected.length} component${selected.length === 1 ? "" : "s"} linked`);
     } catch (err) {

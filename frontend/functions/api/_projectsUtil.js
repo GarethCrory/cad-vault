@@ -37,3 +37,27 @@ export async function writeProjectMeta(env, proj){
     { httpMetadata: { contentType: 'application/json' } }
   );
 }
+
+export async function updateProjectMeta(env, projectNumber, projectName, patch = {}){
+  const db = await loadProjects(env);
+  const list = Array.isArray(db.projects) ? db.projects : [];
+  const numberStr = String(projectNumber);
+  const idx = list.findIndex(p => String(p.projectNumber) === numberStr);
+  const base = idx >= 0 ? list[idx] : { projectNumber, projectName };
+  const merged = {
+    ...base,
+    projectNumber,
+    projectName: projectName ?? base.projectName,
+    ...patch
+  };
+  ensureProjectDir(merged);
+  if (idx >= 0) {
+    list[idx] = merged;
+  } else {
+    list.push(merged);
+  }
+  db.projects = list;
+  await saveProjects(env, db);
+  await writeProjectMeta(env, merged);
+  return merged;
+}

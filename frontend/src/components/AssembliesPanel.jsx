@@ -90,7 +90,7 @@ export default function AssembliesPanel({
         child,
         qty: qtyValue
       });
-      onAssemblyChange?.();
+      if (onAssemblyChange) await onAssemblyChange();
       setLocalRefreshKey((v) => v + 1);
       showToast?.("Quantity updated");
     } catch (err) {
@@ -108,7 +108,7 @@ export default function AssembliesPanel({
         parent: selectedPart,
         child
       });
-      onAssemblyChange?.();
+      if (onAssemblyChange) await onAssemblyChange();
       setLocalRefreshKey((v) => v + 1);
       showToast?.("Component unlinked");
     } catch (err) {

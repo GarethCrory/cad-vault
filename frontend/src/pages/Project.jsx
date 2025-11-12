@@ -145,9 +145,14 @@ function ReleaseTab({ project, parts = [], onPublish, assemblyChildCounts = {} }
 
 export default function Project(){
   const { projectNumber, projectName } = useParams();
-  const project = { projectNumber, projectName };
-
   const [parts, setParts] = useState([]);
+  const [projectMeta, setProjectMeta] = useState({ projectNumber, projectName, partCount: 0 });
+  const project = useMemo(() => ({
+    projectNumber,
+    projectName,
+    partCount: projectMeta.partCount ?? parts.length
+  }), [projectNumber, projectName, projectMeta.partCount, parts.length]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(null);
@@ -334,20 +339,32 @@ export default function Project(){
     });
   }, [parts, types]);
   
-  async function load(){
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
     try{
       const sc = await scanProject(projectNumber, projectName);
-      setParts(sc.parts || []);
+      const nextParts = sc?.parts || [];
+      const nextCount = typeof sc?.partCount === "number"
+        ? sc.partCount
+        : typeof sc?.partsCount === "number"
+          ? sc.partsCount
+          : nextParts.length;
+      setParts(nextParts);
+      setProjectMeta(prev => ({
+        ...(prev || {}),
+        projectNumber,
+        projectName,
+        partCount: nextCount
+      }));
     }catch(e){
       setError("Could not load project parts");
     }finally{
       setLoading(false);
     }
-  }
+  }, [projectNumber, projectName]);
 
-  useEffect(()=>{ load(); }, []);
+  useEffect(()=>{ refresh(); }, [refresh]);
 
   function openAdd(){ setShowAdd(true); }
   function closeAdd(){ setShowAdd(false); }
@@ -363,7 +380,7 @@ export default function Project(){
         notes: form.notes || ""
       });
       setEditing(null);
-      await load();
+      await refresh();
       showToast("Part updated");
     }catch(err){
       console.error("Edit failed", err);
@@ -404,15 +421,14 @@ export default function Project(){
     setRevUpOpen(true);
   }
 
-  function handleAssemblyChange(){
+  const handleAssemblyChange = useCallback(async () => {
     setAssemblyRefreshKey(v => v + 1);
-  }
+    await refresh();
+  }, [refresh]);
 
-  function handlePartDeleted(deleted){
+  async function handlePartDeleted(){
     setEditing(null);
-    setParts(prev => prev.filter(item => !(item.typePrefix === deleted.typePrefix && String(item.partNumber) === String(deleted.partNumber))));
-    load();
-    handleAssemblyChange();
+    await handleAssemblyChange();
     showToast("Part deleted");
   }
 
@@ -757,7 +773,7 @@ export default function Project(){
             assemblies={assemblyCandidates}
             parts={parts}
             onClose={closeAdd}
-            onSaved={()=>{ closeAdd(); load(); }}
+            onSaved={async ()=>{ closeAdd(); await refresh(); }}
             onLinked={handleAssemblyChange}
           />
         )}
@@ -767,7 +783,7 @@ export default function Project(){
             project={project}
             initialSelected={revUpSelected}
             onClose={() => { setRevUpOpen(false); setRevUpSelected(null); }}
-            onSaved={() => { setRevUpOpen(false); setRevUpSelected(null); load(); }}
+            onSaved={async () => { setRevUpOpen(false); setRevUpSelected(null); await refresh(); }}
           />
         )}
         <HistoryModal 
@@ -785,8 +801,8 @@ export default function Project(){
           parts={parts}
           blockedCodes={linkModalBlocked}
           showToast={showToast}
-          onLinked={() => {
-            handleAssemblyChange();
+          onLinked={async () => {
+            await handleAssemblyChange();
             setLinkModalPart(null);
           }}
         />
@@ -796,8 +812,8 @@ export default function Project(){
           assemblies={assemblyCandidates}
           project={project}
           onClose={() => setParentLinkTarget(null)}
-          onLinked={() => {
-            handleAssemblyChange();
+           onLinked={async () => {
+            await handleAssemblyChange();
             setParentLinkTarget(null);
           }}
         />
@@ -805,8 +821,8 @@ export default function Project(){
           isOpen={bulkAttachOpen}
           onClose={() => setBulkAttachOpen(false)}
           project={project}
-          onUploaded={() => {
-            handleAssemblyChange();
+          onUploaded={async () => {
+            await refresh();
             setBulkAttachOpen(false);
           }}
           showToast={showToast}
@@ -1154,7 +1170,7 @@ function EditModal({p, project: projectInfo, assemblies = [], parts = [], childL
         typePrefix: p.typePrefix,
         partNumber: p.partNumber
       });
-      onDeleted?.(p);
+      if (onDeleted) await onDeleted(p);
     }catch(err){
       setDeleteError(err.message || "Delete failed");
     }finally{
@@ -1481,10 +1497,10 @@ function AddFileModal({ project: projectInfo, defaultType="P", defaultPartNumber
       }
       if (links.length) {
         await Promise.all(links);
-        onLinked?.();
+        if (onLinked) await onLinked();
       }
 
-      onSaved && onSaved();
+      if (onSaved) await onSaved();
     }catch(err){
       alert(err.message || String(err));
     }finally{
@@ -1684,7 +1700,7 @@ function RevUpModal({ parts = [], project: projectInfo, initialSelected = null, 
       try { body = JSON.parse(text); } catch(e){ body = text; }
 
       if(!r.ok) throw new Error((body && body.error) ? body.error : String(body));
-      onSaved && onSaved();
+      if (onSaved) await onSaved();
       if (body && body.filename) {
         alert(`Rev up saved as ${body.filename}`);
       }
@@ -1835,7 +1851,7 @@ function LinkToAssemblyModal({ isOpen, part, assemblies = [], project: projectIn
         child: { typePrefix: part.typePrefix, partNumber: part.partNumber },
         qty: Number(qty) > 0 ? Number(qty) : 1
       });
-      onLinked?.();
+      if (onLinked) await onLinked();
       onClose?.();
     }catch(err){
       setError(err.message || "Link failed");
@@ -1925,7 +1941,7 @@ function BulkAttachmentModal({ isOpen, onClose, project: projectInfo, onUploaded
         autoDetect: true
       });
       setResult(res.results || []);
-      onUploaded?.();
+      if (onUploaded) await onUploaded();
       const linked = (res.results || []).filter(row => row.status === "linked").length;
       if (linked) {
         showToast?.(`${linked} PDF${linked === 1 ? "" : "s"} linked to parts`);

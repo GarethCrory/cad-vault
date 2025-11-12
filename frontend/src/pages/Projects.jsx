@@ -112,7 +112,7 @@ export default function Projects(){
 
   const totalPartsAcrossProjects = useMemo(() => {
     return projects.reduce((sum, proj) => {
-      const count = proj.partCount ?? proj.count ?? proj.partsCount ?? 0;
+      const count = proj.partCount ?? proj.count ?? proj.partsCount ?? proj.totalParts ?? 0;
       return sum + (Number(count) || 0);
     }, 0);
   }, [projects]);
@@ -247,7 +247,7 @@ export default function Projects(){
           {!loading && !error && (
             <div className="tile-grid" onDragOver={handleProjectDragOver} onDrop={(e) => handleProjectDrop(e, null)}>
               {filtered.map(p => {
-                const partsCount = p.partCount ?? p.count ?? p.partsCount ?? 0;
+                const partsCount = p.partCount ?? p.count ?? p.partsCount ?? p.totalParts ?? 0;
                 const created = formatDate(p.created || p.createdAt || p.createdOn);
                 const link = `/p/${p.projectNumber}/${encodeURIComponent(p.projectName||"")}`;
                 const cardId = projectKey(p);

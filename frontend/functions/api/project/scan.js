@@ -1,4 +1,5 @@
-import { projectKey, paths, readJSON, writeJSON } from "../_store.js";
+import { readJSON } from "../_store.js";
+import { ensureProjectDir, updateProjectMeta } from "../_projectsUtil.js";
 
 export const onRequestPost = async ({ request, env }) => {
   const { projectNumber, projectName } = await request.json().catch(() => ({}));
@@ -6,10 +7,11 @@ export const onRequestPost = async ({ request, env }) => {
     return new Response(JSON.stringify({ ok:false, error:"projectNumber and projectName required" }), { status:400 });
   }
 
-  const pk = projectKey(projectNumber, projectName);
+  const projectRef = { projectNumber, projectName };
+  const projectDir = ensureProjectDir(projectRef);
 
   // load current docs
-  const partsDoc = await readJSON(env, paths.parts(pk), { items: [] });
+  const partsDoc = await readJSON(env, `data/projects/${projectDir}/parts.json`, { items: [] });
   const normalizeCollection = (value, weight = 0) => {
     if (!value) return [];
     if (Array.isArray(value)) {
@@ -59,21 +61,21 @@ export const onRequestPost = async ({ request, env }) => {
     const { __weight, ...rest } = entry;
     return normalizePart(rest);
   }).filter((part) => part && part.partNumber);
+  const partCount = parts.length;
 
-  // persist latest count to meta so list shows correctly
   try {
-    const meta = await readJSON(env, paths.meta(pk), {});
-    meta.partCount = parts.length;
-    meta.updatedAt = new Date().toISOString();
-    await writeJSON(env, paths.meta(pk), meta);
+    await updateProjectMeta(env, projectNumber, projectName, {
+      partCount,
+      updatedAt: new Date().toISOString()
+    });
   } catch (e) {
-    // non-fatal — still return the scan result
     console.warn("scan: unable to update meta", e);
   }
 
   return new Response(JSON.stringify({
     ok: true,
-    partsCount: parts.length,
+    partCount,
+    partsCount: partCount,
     parts
   }), { headers:{ "content-type":"application/json" }});
 };

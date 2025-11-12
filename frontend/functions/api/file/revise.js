@@ -1,29 +1,49 @@
+import { projectKey, paths, readJSON, writeJSON, partKey } from "../_store.js";
+
 export const onRequestPost = async ({ request, env }) => {
-  try {
+  try{
     const form = await request.formData();
     const file = form.get("file");
-    const projRaw = form.get("project");
-    const project = projRaw ? JSON.parse(projRaw) : {};
-    if (!file || typeof file.stream !== "function") {
-      return new Response(JSON.stringify({ ok: false, error: "no file" }), { status: 400 });
+    if(!file || !file.name) return new Response(JSON.stringify({ error:"file required"}), { status:400, headers:{ "content-type":"application/json" }});
+
+    const metaProject = form.get("project");
+    const proj = metaProject ? JSON.parse(metaProject) : {};
+    const { projectNumber, projectName } = proj;
+    const typePrefix = form.get("typePrefix") || "P";
+    const partNumber = form.get("partNumber");
+
+    if(!projectNumber || !projectName || !partNumber){
+      return new Response(JSON.stringify({ error:"projectNumber, projectName and partNumber required"}), { status:400, headers:{ "content-type":"application/json" }});
     }
 
-    const safeName = (file.name || "part.step").replace(/\s+/g, "_");
-    const key = [
-      "projects",
-      project.projectNumber || "unknown",
-      "parts",
-      `${Date.now()}_${safeName}`
-    ].join("/");
+    const pk = projectKey(projectNumber, projectName);
+    const id = partKey(typePrefix, partNumber);
+    const folder = paths.partFolder(pk, typePrefix, partNumber);
+    const ts = Date.now();
+    const key = `${folder}${ts}_${file.name}`;
 
-    await env.UPLOADS_BUCKET.put(key, file.stream(), {
-      httpMetadata: { contentType: file.type || "application/octet-stream" }
-    });
+    await env.UPLOADS_BUCKET.put(key, await file.arrayBuffer(), { httpMetadata:{ contentType: file.type || "application/octet-stream" }});
 
-    return new Response(JSON.stringify({ ok: true, key }), {
-      headers: { "content-type": "application/json" }
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: String(e) }), { status: 500 });
+    // update parts store with the new revision
+    const partsKey = paths.parts(pk);
+    const parts = await readJSON(env, partsKey, { items: [] });
+    let part = parts.items.find(p => p.id === id);
+    const now = new Date().toISOString();
+
+    if(!part){
+      part = { id, t:(typePrefix||"P").toUpperCase(), n:Number(partNumber)||0, description:"", notes:"", createdAt:now, updatedAt:now, revs:[], attachments:[], history:[] };
+      parts.items.push(part);
+    }
+    part.revs = part.revs || [];
+    part.revs.push({ key, name:file.name, size:file.size||null, uploadedAt: now });
+    part.updatedAt = now;
+    part.history = part.history || [];
+    part.history.push({ ts: now, event:"revise:upload", file:file.name });
+
+    await writeJSON(env, partsKey, parts);
+
+    return new Response(JSON.stringify({ ok:true, key }), { headers:{ "content-type":"application/json" }});
+  }catch(e){
+    return new Response(JSON.stringify({ error:String(e?.message||e) }), { status:500, headers:{ "content-type":"application/json" }});
   }
 };

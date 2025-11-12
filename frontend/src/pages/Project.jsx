@@ -487,7 +487,7 @@ export default function Project(){
             <div>
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <span className="text-xs text-slate-500">{projectNumber}</span>
-                <span className="badge badge-green">active</span>
+                <span className="badge badge-green transition-colors text-green-800 shadow">active</span>
               </div>
               <h2 className="text-2xl font-extrabold tracking-tight">{projectName}</h2>
               <div className="text-xs text-slate-500 mt-1">Client release management</div>

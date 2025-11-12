@@ -919,15 +919,18 @@ button svg {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 11px;
+  border-radius: 8px;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: lowercase;
   letter-spacing: 0.04em;
-  color: #166534;
-  background: #dcfce7;
-  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.25);
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  color: rgb(22 101 52);
+  background: rgba(220, 252, 231, 0.95);
+  border: 1px solid rgba(22, 101, 52, 0.2);
+  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.25), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 .badge-blue,
 .badge-muted {
@@ -1060,7 +1063,7 @@ button svg {
 .seg-control__btn.is-active {
   filter: none;
 }
-.seg-control__btn.is-active.is-outline {
+.seg-control--outline .seg-control__btn.is-active {
   background: rgba(249, 115, 22, 0.12);
   color: var(--vault-accent);
   border-color: var(--vault-accent);

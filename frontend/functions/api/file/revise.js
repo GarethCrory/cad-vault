@@ -7,8 +7,12 @@ export const onRequestPost = async ({ request, env }) => {
     if(!file || !file.name) return new Response(JSON.stringify({ error:"file required"}), { status:400, headers:{ "content-type":"application/json" }});
 
     const metaProject = form.get("project");
-    const proj = metaProject ? JSON.parse(metaProject) : {};
-    const { projectNumber, projectName } = proj;
+    let proj = {};
+    if (metaProject) {
+      try { proj = JSON.parse(metaProject); } catch { proj = {}; }
+    }
+    const projectNumber = proj.projectNumber || form.get("projectNumber") || form.get("project_number");
+    const projectName = proj.projectName || form.get("projectName") || form.get("project_name");
     const typePrefix = form.get("typePrefix") || "P";
     const partNumber = form.get("partNumber");
 

@@ -18,6 +18,7 @@ export async function writeJSON(env, key, value){
 export const paths = {
   projects: () => `data/projects.json`,
   parts: (pk) => `data/projects/${pk}/parts.json`,
+  meta:  (pk) => `data/projects/${pk}/meta.json`,
   bom: (pk) => `data/projects/${pk}/bom.json`,
   attachments: (pk) => `data/projects/${pk}/attachments.json`,
   partFolder: (pk, t, p) => `projects/${pk}/parts/${t||"P"}_${String(p).padStart(3,"0")}/`,

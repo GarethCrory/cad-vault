@@ -10,29 +10,55 @@ export const onRequestPost = async ({ request, env }) => {
 
   // load current docs
   const partsDoc = await readJSON(env, paths.parts(pk), { items: [] });
-  const normalizeCollection = (value) => {
-    if (Array.isArray(value)) return value;
-    if (value && typeof value === "object") {
-      const arr = Object.values(value);
-      if (arr.every((entry) => typeof entry === "number")) {
-        return arr.map((num, idx) => ({
-          id: Object.keys(value)[idx],
-          n: num
-        }));
-      }
-      return arr;
+  const normalizeCollection = (value, weight = 0) => {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value.map((entry) => ({ ...entry, __weight: weight }));
+    }
+    if (typeof value === "object") {
+      const keys = Object.keys(value);
+      return keys.map((key) => {
+        const entry = value[key];
+        if (entry && typeof entry === "object") {
+          return { id: entry.id || key, ...entry, __weight: weight };
+        }
+        return { id: key, value: entry, n: Number(entry) || 0, __weight: weight };
+      });
     }
     if (typeof value === "number" || typeof value === "string") {
-      return [{ n: Number(value) || 0, raw: value }];
+      return [{ value, n: Number(value) || 0, __weight: weight }];
     }
     return [];
   };
-  const items = [
-    normalizeCollection(partsDoc.items),
-    normalizeCollection(partsDoc.parts),
-    normalizeCollection(partsDoc)
-  ].find((collection) => collection.length) || [];
-  const parts = items.map(normalizePart);
+
+  const sources = [
+    normalizeCollection(partsDoc.items, 3),
+    normalizeCollection(partsDoc.parts, 2),
+    normalizeCollection(partsDoc, 1)
+  ].flat();
+
+  const keyed = new Map();
+  const resolveKey = (raw = {}) => {
+    if (raw.id) return raw.id;
+    if (raw.key) return raw.key;
+    if (raw.code) return raw.code;
+    const type = String(raw.t || raw.typePrefix || raw.type || "P").toUpperCase();
+    const partNum = String(raw.partNumber ?? raw.n ?? raw.number ?? "").padStart(3, "0");
+    return `${type}_${partNum}`;
+  };
+
+  for (const entry of sources) {
+    const key = resolveKey(entry);
+    const existing = keyed.get(key);
+    if (!existing || (entry.__weight || 0) >= (existing.__weight || 0)) {
+      keyed.set(key, { ...(existing || {}), ...entry });
+    }
+  }
+
+  const parts = Array.from(keyed.values()).map((entry) => {
+    const { __weight, ...rest } = entry;
+    return normalizePart(rest);
+  }).filter((part) => part && part.partNumber);
 
   // persist latest count to meta so list shows correctly
   try {

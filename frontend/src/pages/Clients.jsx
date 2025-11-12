@@ -184,11 +184,42 @@ export default function Clients(){
     }
   }, [editingClient?.name, projects, loadProjects]);
 
-  async function handleDeleteClient(name){
-    if(!window.confirm(`Delete ${name}? This only removes your local note.`)) return;
-    await removeClient(name);
-    loadClients();
-  }
+  const handleDeleteClient = useCallback(async (client) => {
+    const name = client?.name;
+    if(!name) return;
+    const normalized = name.trim();
+    if (!normalized) return;
+    if(!window.confirm(`Remove client ${normalized}?`)) return;
+    if (client.source === "project") {
+      const affected = projects.filter(
+        (p) => (p.client || "Personal Projects").trim() === normalized
+      );
+      if (affected.length) {
+        await Promise.all(
+          affected.map((proj) =>
+            updateProjectMeta({
+              projectNumber: proj.projectNumber,
+              projectName: proj.projectName,
+              client: "Personal Projects",
+              contactPerson: proj.contactPerson || "",
+              email: proj.email || "",
+              phone: proj.phone || "",
+              notes: proj.notes || "",
+            })
+          )
+        );
+        await loadProjects();
+      }
+    } else {
+      await removeClient(normalized);
+    }
+    await loadClients();
+    setClientOrder((prev) => {
+      const next = prev.filter((n) => n !== normalized);
+      persistClientOrder(next);
+      return next;
+    });
+  }, [projects, loadProjects, loadClients, persistClientOrder]);
 
   function handleClientDragStart(e, name){
     setDraggingClient(name);
@@ -269,8 +300,8 @@ export default function Clients(){
               key={client.name}
               client={client}
               onEdit={() => setEditingClient(client)}
-              onDelete={() => handleDeleteClient(client.name)}
-              canDelete={client.source !== "project"}
+              onDelete={() => handleDeleteClient(client)}
+              canDelete={true}
               isDragging={draggingClient === client.name}
               dragHandlers={{
                 draggable: true,

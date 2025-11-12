@@ -116,6 +116,13 @@ body {
   border: 1px solid var(--vault-border);
   border-radius: var(--vault-radius-card);
   padding: 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
 }
 
 /* Headings */

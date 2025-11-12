@@ -12,12 +12,26 @@ export const onRequestPost = async ({ request, env }) => {
   const partsDoc = await readJSON(env, paths.parts(pk), { items: [] });
   const normalizeCollection = (value) => {
     if (Array.isArray(value)) return value;
-    if (value && typeof value === "object") return Object.values(value);
+    if (value && typeof value === "object") {
+      const arr = Object.values(value);
+      if (arr.every((entry) => typeof entry === "number")) {
+        return arr.map((num, idx) => ({
+          id: Object.keys(value)[idx],
+          n: num
+        }));
+      }
+      return arr;
+    }
+    if (typeof value === "number" || typeof value === "string") {
+      return [{ n: Number(value) || 0, raw: value }];
+    }
     return [];
   };
-  const items = normalizeCollection(partsDoc.items).length
-    ? normalizeCollection(partsDoc.items)
-    : normalizeCollection(partsDoc.parts);
+  const itemsCandidates = [
+    normalizeCollection(partsDoc.items),
+    normalizeCollection(partsDoc.parts),
+    normalizeCollection(partsDoc)
+  ].find((collection) => collection.length) || [];
   const parts = items.map(normalizePart);
 
   // persist latest count to meta so list shows correctly

@@ -1,4 +1,4 @@
-import { projectKey, paths, readJSON, writeJSON } from "../../_store.js";
+import { projectKey, paths, readJSON, writeJSON } from "../_store.js";
 
 export const onRequestPost = async ({ request, env }) => {
   const { projectNumber, projectName } = await request.json().catch(() => ({}));

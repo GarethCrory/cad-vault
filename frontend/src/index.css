@@ -590,6 +590,48 @@ button:active,
   display: block;
   min-height: 100vh;
   background: var(--bg, #f8fafc);
+  position: relative;
+}
+
+.mobile-nav-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 40;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 1px solid var(--vault-border);
+  background: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(15,23,42,0.1);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 35;
+}
+
+.sidebar-close {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid var(--vault-border);
+  background: #fff;
+  align-items: center;
+  justify-content: center;
+  color: var(--vault-text-primary);
 }
 
 /* make the sidebar fixed on the left and full height */
@@ -605,6 +647,7 @@ button:active,
   background: var(--sidebar-bg, #ffffff);
   border-right: 1px solid rgba(15,23,42,0.05);
   box-shadow: 0 1px 0 rgba(15,23,42,0.03);
+  transition: transform 0.3s ease;
 }
 
 /* main area fills remaining space and scrolls independently */
@@ -635,13 +678,26 @@ button:active,
 
 /* responsive */
 @media (max-width: 900px) {
-  :root { --sidebar-width: 64px; } /* collapse on small screens */
-  .app-shell .sidebar { width: var(--sidebar-width); }
+  :root { --sidebar-width: 280px; }
+  .mobile-nav-toggle { display: inline-flex; }
+  .app-shell .sidebar {
+    transform: translateX(-100%);
+    width: var(--sidebar-width);
+  }
+  .app-shell.nav-open .sidebar {
+    transform: translateX(0);
+  }
+  .sidebar-close {
+    display: inline-flex;
+  }
   .app-shell .main-content {
-    margin-left: var(--sidebar-width);
-    width: calc(100% - var(--sidebar-width));
-    padding: 24px;
-    justify-content: flex-start;
+    margin-left: 0;
+    width: 100%;
+    padding: 72px 16px 24px;
+  }
+  .app-shell.nav-open .sidebar-overlay {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 

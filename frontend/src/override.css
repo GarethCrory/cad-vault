@@ -24,6 +24,16 @@ body{ background:var(--vault-bg)!important; }
   border-radius:16px!important;
 }
 
+/* Project tiles should not animate/pop */
+.tile {
+  transition: none !important;
+  box-shadow: none !important;
+}
+.tile:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 /* All generic buttons → rounded rectangles with outline style */
 button, .btn, .btn-primary, .btn-secondary, .header button, .header a,
 .upload-btn, .header-btn, .actions button, .ghost-btn, .outline-btn {

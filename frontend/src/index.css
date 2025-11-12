@@ -801,6 +801,35 @@ body {
 .tile {
   padding: 1rem;
 }
+.project-hero {
+  padding: 16px;
+}
+.project-hero .project-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+.project-hero .stat-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ffffff, #f6f8ff);
+  border: 1px solid #dfe7f4;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+.project-hero .stat-card .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b93a6;
+}
+.project-hero .stat-card .value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.project-hero .stat-card .value.accent {
+  color: #f97316;
+}
 
 .stat-card {
   background: var(--mono-panel-soft);

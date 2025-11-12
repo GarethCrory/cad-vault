@@ -43,20 +43,48 @@ function normalizePart(raw = {}) {
     : String(raw.partNumber || 0).padStart(3, "0");
 
   const revs = Array.isArray(raw.revs) ? raw.revs : [];
+  const history = Array.isArray(raw.history) ? raw.history : [];
   const latestRevEntry = revs[revs.length - 1];
-  const latestRev = latestRevEntry?.rev || latestRevEntry?.label || inferRevFromName(latestRevEntry?.name || latestRevEntry?.key);
-  const latestFile = latestRevEntry?.name || latestRevEntry?.key || null;
+  const latestHistoryEntry = [...history].reverse().find(item => item && (item.rev || item.file || item.description)) || null;
+
+  const latestRev =
+    raw.latestRev
+    || raw.rev
+    || latestRevEntry?.rev
+    || latestRevEntry?.label
+    || inferRevFromName(latestRevEntry?.name || latestRevEntry?.key)
+    || latestHistoryEntry?.rev
+    || inferRevFromName(latestHistoryEntry?.file);
+
+  const latestFile =
+    raw.latestFile
+    || raw.file
+    || latestRevEntry?.name
+    || latestRevEntry?.key
+    || latestHistoryEntry?.file
+    || null;
+
+  const description = (raw.description
+    ?? raw.meta?.description
+    ?? latestHistoryEntry?.description
+    ?? raw.desc
+    ?? "").toString().trim();
+
+  const notes = (raw.notes
+    ?? raw.meta?.notes
+    ?? latestHistoryEntry?.notes
+    ?? "").toString();
 
   return {
     typePrefix: type,
     partNumber,
-    description: raw.description || "",
-    notes: raw.notes || "",
-    latestRev,
+    description,
+    notes,
+    latestRev: latestRev || "",
     latestFile,
     revs,
     attachments: raw.attachments || [],
-    history: raw.history || [],
+    history,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt
   };

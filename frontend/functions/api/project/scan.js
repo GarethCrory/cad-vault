@@ -1,5 +1,90 @@
-import { readJSON } from "../_store.js";
 import { ensureProjectDir, updateProjectMeta } from "../_projectsUtil.js";
+
+function sanitizeLegacy(name = "") {
+  return String(name)
+    .normalize("NFKD")
+    .replace(/[^\w\s.-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-") || "project";
+}
+
+function legacyProjectDir(projectNumber, projectName) {
+  const num = String(projectNumber || "").padStart(3, "0");
+  return `${num}_${sanitizeLegacy(projectName || "project")}`;
+}
+
+const FILE_NAME_RE = /^(\d+)_([A-Z])(\d{3})_Rev([A-Z])_(.+)\.step$/i;
+
+async function readPartsDocument(env, primaryDir, legacyDir) {
+  const attempt = async (dir) => {
+    if (!dir) return null;
+    const key = `data/projects/${dir}/parts.json`;
+    const obj = await env.UPLOADS_BUCKET.get(key);
+    if (!obj) return null;
+    try {
+      const txt = await obj.text();
+      return JSON.parse(txt || "{}");
+    } catch {
+      return null;
+    }
+  };
+  return (await attempt(primaryDir)) || (await attempt(legacyDir)) || { items: [] };
+}
+
+async function scanLegacyParts(env, projectNumber, projectName) {
+  const dir = legacyProjectDir(projectNumber, projectName);
+  const prefix = `projects/${dir}/parts/`;
+  const results = [];
+  try{
+    let cursor;
+    const prefixes = new Set();
+    do{
+      const listing = await env.UPLOADS_BUCKET.list({ prefix, delimiter: "/", cursor });
+      (listing.delimitedPrefixes || []).forEach((p) => prefixes.add(p));
+      cursor = listing.truncated ? listing.cursor : null;
+    }while(cursor);
+
+    for (const partPrefix of prefixes){
+      const match = /parts\/([A-Z])_(\d{3})\//i.exec(partPrefix);
+      if (!match) continue;
+      const typePrefix = match[1].toUpperCase();
+      const partNumber = match[2];
+      let cursorChild;
+      let latest = null;
+      const score = (rev) => (rev ? rev.charCodeAt(0) : 0);
+      do{
+        const listing = await env.UPLOADS_BUCKET.list({ prefix: partPrefix, cursor: cursorChild });
+        (listing.objects || []).forEach((obj) => {
+          const base = obj.key.split("/").pop();
+          if (!base || base.endsWith(".json")) return;
+          const fileMatch = FILE_NAME_RE.exec(base);
+          if (!fileMatch) return;
+          const rev = fileMatch[4].toUpperCase();
+          const description = fileMatch[5].replace(/[-_]/g, " ").trim();
+          if (!latest || score(rev) > score(latest.rev)) {
+            latest = { rev, file: base, description };
+          }
+        });
+        cursorChild = listing.truncated ? listing.cursor : null;
+      }while(cursorChild);
+      results.push({
+        typePrefix,
+        partNumber,
+        description: latest?.description || "",
+        latestRev: latest?.rev || "",
+        latestFile: latest?.file || null,
+        notes: "",
+        revs: [],
+        attachments: [],
+        history: [],
+        __weight: -1
+      });
+    }
+  }catch(err){
+    console.warn("scan: legacy part listing failed", err);
+  }
+  return results;
+}
 
 export const onRequestPost = async ({ request, env }) => {
   const { projectNumber, projectName } = await request.json().catch(() => ({}));
@@ -9,9 +94,10 @@ export const onRequestPost = async ({ request, env }) => {
 
   const projectRef = { projectNumber, projectName };
   const projectDir = ensureProjectDir(projectRef);
+  const legacyDir = legacyProjectDir(projectNumber, projectName);
 
-  // load current docs
-  const partsDoc = await readJSON(env, `data/projects/${projectDir}/parts.json`, { items: [] });
+  // load current docs (modern or legacy path)
+  const partsDoc = await readPartsDocument(env, projectDir, legacyDir);
 
   const looksLikePart = (entry = {}) => {
     if (!entry || typeof entry !== "object") return false;
@@ -61,25 +147,29 @@ export const onRequestPost = async ({ request, env }) => {
     }
   }
 
+  const legacyParts = await scanLegacyParts(env, projectNumber, projectName);
+  for (const entry of legacyParts) {
+    const key = resolveKey(entry);
+    if (keyed.has(key)) continue;
+    keyed.set(key, entry);
+  }
+
   const parts = Array.from(keyed.values()).map((entry) => {
     const { __weight, ...rest } = entry;
     return normalizePart(rest);
   }).filter((part) => part && part.partNumber);
   const partCount = parts.length;
 
-  try {
-    await updateProjectMeta(env, projectNumber, projectName, {
-      partCount,
-      updatedAt: new Date().toISOString()
-    });
-  } catch (e) {
-    console.warn("scan: unable to update meta", e);
-  }
+  const meta = await updateProjectMeta(env, projectNumber, projectName, {
+    partCount,
+    updatedAt: new Date().toISOString()
+  });
 
   return new Response(JSON.stringify({
     ok: true,
     partCount,
     partsCount: partCount,
+    meta,
     parts
   }), { headers:{ "content-type":"application/json" }});
 };

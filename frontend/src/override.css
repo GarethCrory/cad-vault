@@ -184,25 +184,6 @@ button:focus-visible, .btn:focus-visible, .upload-btn:focus-visible {
   color: var(--vault-ink)!important;
 }
 
-.tabbar {
-  border-bottom:1px solid rgba(15,23,42,0.05)!important;
-  padding-bottom:12px!important;
-  gap:12px!important;
-}
-.tabbar .tab {
-  border-radius:30px!important;
-  border-color:transparent!important;
-  background:transparent!important;
-  color:var(--vault-ink-2)!important;
-  padding:6px 18px!important;
-}
-.tabbar .tab.tab-active,
-.tabbar .tab[aria-selected="true"] {
-  border-color:var(--vault-accent)!important;
-  color:var(--vault-ink)!important;
-  box-shadow:0 8px 20px rgba(249,115,22,0.2)!important;
-}
-
 /* --- normalize any remaining dark buttons --- */
 button[class*="dark"], .btn-dark, .action-dark { 
   background:#fff !important;

@@ -18,6 +18,12 @@ async function handle({ env }) {
     }
 
     const enhanced = await Promise.all(projects.map(project => enhanceProject(env, project)));
+    enhanced.sort((a, b) => {
+      const aOrder = typeof a.displayOrder === "number" ? a.displayOrder : Number.MAX_SAFE_INTEGER;
+      const bOrder = typeof b.displayOrder === "number" ? b.displayOrder : Number.MAX_SAFE_INTEGER;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return String(a.projectNumber || "").localeCompare(String(b.projectNumber || ""));
+    });
     return json({ projects: enhanced });
   } catch (err) {
     // Never block the UI — return an empty list with the error for visibility

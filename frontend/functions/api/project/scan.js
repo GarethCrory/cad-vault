@@ -27,7 +27,7 @@ export const onRequestPost = async ({ request, env }) => {
     }
     return [];
   };
-  const itemsCandidates = [
+  const items = [
     normalizeCollection(partsDoc.items),
     normalizeCollection(partsDoc.parts),
     normalizeCollection(partsDoc)

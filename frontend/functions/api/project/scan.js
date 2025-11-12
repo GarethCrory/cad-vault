@@ -15,7 +15,7 @@ function legacyProjectDir(projectNumber, projectName) {
 
 const FILE_NAME_RE = /^(\d+)_([A-Z])(\d{3})_Rev([A-Z])_(.+)\.step$/i;
 
-async function readPartsDocument(env, primaryDir, legacyDir) {
+async function readPartsDocument(env, dirs = []) {
   const attempt = async (dir) => {
     if (!dir) return null;
     const key = `data/projects/${dir}/parts.json`;
@@ -28,57 +28,63 @@ async function readPartsDocument(env, primaryDir, legacyDir) {
       return null;
     }
   };
-  return (await attempt(primaryDir)) || (await attempt(legacyDir)) || { items: [] };
+  for (const dir of dirs) {
+    const doc = await attempt(dir);
+    if (doc) return doc;
+  }
+  return { items: [] };
 }
 
-async function scanLegacyParts(env, projectNumber, projectName) {
-  const dir = legacyProjectDir(projectNumber, projectName);
-  const prefix = `projects/${dir}/parts/`;
+async function scanLegacyParts(env, dirs = []) {
   const results = [];
   try{
-    let cursor;
-    const prefixes = new Set();
-    do{
-      const listing = await env.UPLOADS_BUCKET.list({ prefix, delimiter: "/", cursor });
-      (listing.delimitedPrefixes || []).forEach((p) => prefixes.add(p));
-      cursor = listing.truncated ? listing.cursor : null;
-    }while(cursor);
-
-    for (const partPrefix of prefixes){
-      const match = /parts\/([A-Z])_(\d{3})\//i.exec(partPrefix);
-      if (!match) continue;
-      const typePrefix = match[1].toUpperCase();
-      const partNumber = match[2];
-      let cursorChild;
-      let latest = null;
-      const score = (rev) => (rev ? rev.charCodeAt(0) : 0);
+    for (const dir of dirs){
+      if (!dir) continue;
+      const prefix = `projects/${dir}/parts/`;
+      let cursor;
+      const prefixes = new Set();
       do{
-        const listing = await env.UPLOADS_BUCKET.list({ prefix: partPrefix, cursor: cursorChild });
-        (listing.objects || []).forEach((obj) => {
-          const base = obj.key.split("/").pop();
-          if (!base || base.endsWith(".json")) return;
-          const fileMatch = FILE_NAME_RE.exec(base);
-          if (!fileMatch) return;
-          const rev = fileMatch[4].toUpperCase();
-          const description = fileMatch[5].replace(/[-_]/g, " ").trim();
-          if (!latest || score(rev) > score(latest.rev)) {
-            latest = { rev, file: base, description };
-          }
+        const listing = await env.UPLOADS_BUCKET.list({ prefix, delimiter: "/", cursor });
+        (listing.delimitedPrefixes || []).forEach((p) => prefixes.add(p));
+        cursor = listing.truncated ? listing.cursor : null;
+      }while(cursor);
+
+      for (const partPrefix of prefixes){
+        const match = /parts\/([A-Z])_(\d{3})\//i.exec(partPrefix);
+        if (!match) continue;
+        const typePrefix = match[1].toUpperCase();
+        const partNumber = match[2];
+        let cursorChild;
+        let latest = null;
+        const score = (rev) => (rev ? rev.charCodeAt(0) : 0);
+        do{
+          const listing = await env.UPLOADS_BUCKET.list({ prefix: partPrefix, cursor: cursorChild });
+          (listing.objects || []).forEach((obj) => {
+            const base = obj.key.split("/").pop();
+            if (!base || base.endsWith(".json")) return;
+            const fileMatch = FILE_NAME_RE.exec(base);
+            if (!fileMatch) return;
+            const rev = fileMatch[4].toUpperCase();
+            const description = fileMatch[5].replace(/[-_]/g, " ").trim();
+            if (!latest || score(rev) > score(latest.rev)) {
+              latest = { rev, file: base, description };
+            }
+          });
+          cursorChild = listing.truncated ? listing.cursor : null;
+        }while(cursorChild);
+        results.push({
+          typePrefix,
+          partNumber,
+          description: latest?.description || "",
+          latestRev: latest?.rev || "",
+          latestFile: latest?.file || null,
+          notes: "",
+          revs: [],
+          attachments: [],
+          history: [],
+          __weight: -1
         });
-        cursorChild = listing.truncated ? listing.cursor : null;
-      }while(cursorChild);
-      results.push({
-        typePrefix,
-        partNumber,
-        description: latest?.description || "",
-        latestRev: latest?.rev || "",
-        latestFile: latest?.file || null,
-        notes: "",
-        revs: [],
-        attachments: [],
-        history: [],
-        __weight: -1
-      });
+      }
     }
   }catch(err){
     console.warn("scan: legacy part listing failed", err);
@@ -94,10 +100,12 @@ export const onRequestPost = async ({ request, env }) => {
 
   const projectRef = { projectNumber, projectName };
   const projectDir = ensureProjectDir(projectRef);
+  const encodedDir = `${String(projectNumber || "000").padStart(3,"0")}__${encodeURIComponent(projectName || "Untitled")}`;
   const legacyDir = legacyProjectDir(projectNumber, projectName);
+  const candidateDirs = Array.from(new Set([projectDir, encodedDir, legacyDir].filter(Boolean)));
 
   // load current docs (modern or legacy path)
-  const partsDoc = await readPartsDocument(env, projectDir, legacyDir);
+  const partsDoc = await readPartsDocument(env, candidateDirs);
 
   const looksLikePart = (entry = {}) => {
     if (!entry || typeof entry !== "object") return false;
@@ -147,7 +155,7 @@ export const onRequestPost = async ({ request, env }) => {
     }
   }
 
-  const legacyParts = await scanLegacyParts(env, projectNumber, projectName);
+  const legacyParts = await scanLegacyParts(env, candidateDirs);
   for (const entry of legacyParts) {
     const key = resolveKey(entry);
     if (keyed.has(key)) continue;

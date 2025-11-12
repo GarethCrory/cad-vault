@@ -227,6 +227,7 @@ body {
   height: 44px;
   padding: 0 12px;
   border-bottom: 1px solid var(--vault-border);
+  text-align: left;
 }
 
 .table td {
@@ -237,6 +238,7 @@ body {
   padding: 12px;
   border-bottom: 1px solid var(--vault-border);
   background: #fff;
+  text-align: left;
 }
 .table tbody tr:nth-child(even) td {
   background: #fbfcff;

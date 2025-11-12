@@ -211,7 +211,7 @@ export default function Clients(){
               client={client}
               onEdit={() => setEditingClient(client)}
               onDelete={() => handleDeleteClient(client.name)}
-              canDelete={client.source === "local"}
+              canDelete={client.source !== "project"}
               isDragging={draggingClient === client.name}
               dragHandlers={{
                 draggable: true,

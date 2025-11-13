@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Cog6ToothIcon, UserGroupIcon, HomeIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Cog6ToothIcon, UserGroupIcon, HomeIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 
 export default function App(){
   const [navOpen, setNavOpen] = useState(false);
@@ -18,6 +18,16 @@ export default function App(){
   }, []);
 
   function closeNav(){ setNavOpen(false); }
+
+  function handleLogout(){
+    if (typeof window === "undefined") return;
+    const logoutBase = import.meta.env.VITE_LOGOUT_URL || "/.cdn-cgi/access/logout";
+    const origin = window.location.origin || "/";
+    const base = logoutBase || "/";
+    const joiner = base.includes("?") ? "&" : "?";
+    const target = `${base}${origin ? `${joiner}returnTo=${encodeURIComponent(origin)}` : ""}`;
+    window.location.href = target;
+  }
 
   return (
     <div className={`app-shell ${navOpen ? "nav-open" : ""}`}>
@@ -55,8 +65,18 @@ export default function App(){
             Settings
           </NavLink>
         </nav>
-        <div className="px-5 py-6 mt-auto text-xs text-slate-500">
-          Version 1.0.0 • {buildLabel}<br/>CAD Project Management
+        <div className="px-5 mt-auto space-y-4 pb-6">
+          <button
+            type="button"
+            className="sidebar-link justify-start"
+            onClick={handleLogout}
+          >
+            <ArrowRightOnRectangleIcon className="h-5 w-5" />
+            Sign out
+          </button>
+          <div className="text-xs text-slate-500">
+            Version 1.0.0 • {buildLabel}<br/>CAD Project Management
+          </div>
         </div>
       </aside>
 

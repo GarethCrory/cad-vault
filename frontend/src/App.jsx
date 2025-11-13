@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Cog6ToothIcon, UserGroupIcon, HomeIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
-import { useAuth } from "./context/AuthContext.jsx";
+import { Cog6ToothIcon, UserGroupIcon, HomeIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function App(){
   const [navOpen, setNavOpen] = useState(false);
-  const { user, logout } = useAuth();
   const navClass = ({ isActive }) =>
     `sidebar-link ${isActive ? "sidebar-link-active" : ""}`;
   const buildHash = (typeof __BUILD__ !== "undefined" && __BUILD__) ? __BUILD__ : "dev";
@@ -57,22 +55,8 @@ export default function App(){
             Settings
           </NavLink>
         </nav>
-        <div className="px-5 mt-auto space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            <div className="font-semibold text-slate-900">Signed in</div>
-            <div>{user?.name || user?.email}</div>
-            <button
-              type="button"
-              className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-rose-600 hover:text-rose-700"
-              onClick={logout}
-            >
-              <ArrowRightOnRectangleIcon className="h-4 w-4" />
-              Sign out
-            </button>
-          </div>
-          <div className="py-3 text-xs text-slate-500 border-t border-slate-200">
-            Version 1.0.0 • {buildLabel}<br/>CAD Project Management
-          </div>
+        <div className="px-5 py-6 mt-auto text-xs text-slate-500">
+          Version 1.0.0 • {buildLabel}<br/>CAD Project Management
         </div>
       </aside>
 

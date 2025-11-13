@@ -18,7 +18,6 @@ import {
 import bomRoutes from "./bomRoutes.js";
 import attachmentRoutes from "./attachmentRoutes.js";
 import { removePartReferences } from "./bomService.js";
-import authRouter, { authMiddleware, ensureDefaultAdmin } from "./authService.js";
 // optional - some repos may have this, otherwise ignore
 let editPartBatch = null;
 try { ({ editPartBatch } = await import("./editService.js")); } catch {}
@@ -38,9 +37,6 @@ app.use(cors({
   allowedHeaders: ["content-type"]
 }));
 app.use(express.json());
-await ensureDefaultAdmin();
-app.use("/api/auth", authRouter);
-app.use(authMiddleware);
 
 const upload = multer({ dest: path.join(process.cwd(), "uploads") });
 

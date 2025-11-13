@@ -1,16 +1,48 @@
+import { getStoredToken } from "./utils/authStorage.js";
+
 export const API_BASE = ""; const BASE = API_BASE;
+
+function authHeaders(base = {}) {
+  const token = getStoredToken();
+  const headers = { ...base };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+function notifyUnauthorised(status) {
+  if (status === 401 && typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("cv:unauthorised"));
+  }
+}
+
+async function readJsonResponse(response) {
+  if (!response.ok) {
+    notifyUnauthorised(response.status);
+    let text = await response.text().catch(() => "");
+    if (text) {
+      try {
+        const data = JSON.parse(text);
+        if (data && data.error) {
+          text = data.error;
+        }
+      } catch {
+        // plain text fallback
+      }
+    }
+    throw new Error(text || "request failed");
+  }
+  return response.json();
+}
 
 async function jpost(path, body){
   const r = await fetch(BASE + path, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(body || {})
   });
-  if(!r.ok){
-    const t = await r.text().catch(()=> "");
-    throw new Error(t || "request failed");
-  }
-  return r.json();
+  return readJsonResponse(r);
 }
 
 export async function listProjects(){
@@ -60,11 +92,10 @@ export async function scanProject(projectNumber, projectName){
 export async function history({ projectNumber, projectName, typePrefix, partNumber }) {
   const r = await fetch(`${BASE}/api/part/history`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ projectNumber, projectName, typePrefix, partNumber })
   });
-  if (!r.ok) throw new Error(await r.text());
-  return await r.json();
+  return readJsonResponse(r);
 }
 
 export async function editPart(p){
@@ -83,12 +114,8 @@ export async function reviseUpload({ file, projectNumber, projectName, typePrefi
   fd.append("partNumber", partNumber);
   fd.append("description", description||"");
   fd.append("notes", notes||"");
-  const r = await fetch(BASE + "/api/file/revise", { method:"POST", body: fd });
-  if(!r.ok){
-    const t = await r.text().catch(()=> "");
-    throw new Error(t || "upload failed");
-  }
-  return r.json();
+  const r = await fetch(BASE + "/api/file/revise", { method:"POST", body: fd, headers: authHeaders() });
+  return readJsonResponse(r);
 }
 
 export async function bomGet(body){ return jpost("/api/bom/get", body); }
@@ -103,10 +130,15 @@ export async function deletePart(body){
     if (typeof window !== "undefined" && (message.includes("Cannot POST") || message.includes("404"))) {
       const res = await fetch(`${BASE}/api/part/edit`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ ...(body || {}), action: "delete" })
       });
-      if (res.ok) return res.json();
+      if (!res.ok) {
+        notifyUnauthorised(res.status);
+        const text = await res.text().catch(() => "");
+        throw new Error(text || "request failed");
+      }
+      return res.json();
     }
     throw err;
   }
@@ -123,12 +155,8 @@ export async function uploadAttachments({ projectNumber, projectName, typePrefix
   if (typeof partNumber !== "undefined" && partNumber !== null) form.append("partNumber", partNumber);
   form.append("autoDetect", autoDetect ? "true" : "false");
   (files || []).forEach(file => form.append("files", file));
-  const res = await fetch(`${API_BASE}/api/attachment/upload`, { method: "POST", body: form });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Attachment upload failed");
-  }
-  return res.json();
+  const res = await fetch(`${API_BASE}/api/attachment/upload`, { method: "POST", body: form, headers: authHeaders() });
+  return readJsonResponse(res);
 }
 
 export async function listClients(){
@@ -144,14 +172,23 @@ export async function deleteClientRemote(payload){
 }
 
 export async function getClientOrder(){
-  const res = await fetch(BASE + "/api/clients/order", { method: "GET" });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Unable to load client order");
-  }
-  return res.json();
+  const res = await fetch(BASE + "/api/clients/order", { method: "GET", headers: authHeaders() });
+  return readJsonResponse(res);
 }
 
 export async function saveClientOrderRemote(order = []){
   return jpost("/api/clients/order", { order });
+}
+
+export async function loginRequest(payload){
+  return jpost("/api/auth/login", payload);
+}
+
+export async function logoutRequest(){
+  return jpost("/api/auth/logout", {});
+}
+
+export async function fetchCurrentUser(){
+  const res = await fetch(BASE + "/api/auth/me", { method: "GET", headers: authHeaders() });
+  return readJsonResponse(res);
 }

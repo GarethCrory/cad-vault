@@ -69,19 +69,17 @@ export default function App(){
             <Cog6ToothIcon className="h-5 w-5" />
             Settings
           </NavLink>
-        </nav>
-        <div className="px-5 mt-auto space-y-4 pb-6">
           <button
             type="button"
-            className="sidebar-link justify-start"
+            className="sidebar-link justify-start text-rose-600 hover:text-rose-700"
             onClick={handleLogout}
           >
             <ArrowRightOnRectangleIcon className="h-5 w-5" />
             Sign out
           </button>
-          <div className="text-xs text-slate-500">
-            Version 1.0.0 • {buildLabel}<br/>CAD Project Management
-          </div>
+        </nav>
+        <div className="px-5 py-6 mt-auto text-xs text-slate-500">
+          Version 1.0.0 • {buildLabel}<br/>CAD Project Management
         </div>
       </aside>
 

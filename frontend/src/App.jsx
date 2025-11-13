@@ -1,20 +1,10 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { Cog6ToothIcon, UserGroupIcon, HomeIcon } from "@heroicons/react/24/outline";
-import { API_BASE } from "./api.js";
 
 export default function App(){
   const navClass = ({ isActive }) =>
     `sidebar-link ${isActive ? "sidebar-link-active" : ""}`;
-
-  async function handleSignOut(){
-    try {
-      await fetch(`${API_BASE}/logout`, { method: "POST", credentials: "include" });
-    }catch(err){
-      // ignore errors, sign-out endpoint may not exist yet
-    }
-    window.location.href = "/";
-  }
 
   return (
     <div className="app-shell">
@@ -41,15 +31,26 @@ export default function App(){
             Settings
           </NavLink>
         </nav>
-        <div className="px-5 py-6 mt-auto text-xs text-slate-500">Version 1.0.0<br/>CAD Project Management</div>
+        <div className="px-5 py-4 mt-auto space-y-2 text-xs text-slate-500">
+          <button
+            type="button"
+            className="signout-inline w-full justify-center"
+            onClick={() => {
+              window.location.href =
+                "https://cad-vault.pages.dev/cdn-cgi/access/logout?return_to=https://cad-vault.pages.dev";
+            }}
+          >
+            Sign out
+          </button>
+          <div className="text-xs text-slate-500">
+            Version 1.0.0
+            <br />
+            CAD Project Management
+          </div>
+        </div>
       </aside>
 
       <main className="main-content">
-        <div className="global-actions">
-          <button type="button" className="signout-inline" onClick={handleSignOut}>
-            Sign out
-          </button>
-        </div>
         <Outlet />
       </main>
     </div>

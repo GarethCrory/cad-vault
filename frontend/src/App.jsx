@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { Cog6ToothIcon, UserGroupIcon, HomeIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
-import logoMark from "./assets/cadvault-logo.svg";
+import logoMark from "./assets/cadvault-logo.png";
 
 export default function App(){
   const [navOpen, setNavOpen] = useState(false);

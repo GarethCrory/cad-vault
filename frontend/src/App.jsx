@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { Cog6ToothIcon, UserGroupIcon, HomeIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import logoMark from "./assets/cadvault-logo.svg";
 
 export default function App(){
   const [navOpen, setNavOpen] = useState(false);
@@ -50,7 +51,9 @@ export default function App(){
           <XMarkIcon className="h-6 w-6" />
         </button>
         <div className="px-5 py-5 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-ink text-white grid place-items-center text-xl">📁</div>
+          <div className="logo-mark h-10 w-10 rounded-xl overflow-hidden border border-slate-200">
+            <img src={logoMark} alt="CAD Vault logo" />
+          </div>
           <div>
             <div className="font-extrabold tracking-tight">CAD Vault</div>
             <div className="text-xs text-slate-500">Release Management</div>
@@ -69,14 +72,6 @@ export default function App(){
             <Cog6ToothIcon className="h-5 w-5" />
             Settings
           </NavLink>
-          <button
-            type="button"
-            className="sidebar-link justify-start text-rose-600 hover:text-rose-700"
-            onClick={handleLogout}
-          >
-            <ArrowRightOnRectangleIcon className="h-5 w-5" />
-            Sign out
-          </button>
         </nav>
         <div className="px-5 py-6 mt-auto text-xs text-slate-500">
           Version 1.0.0 • {buildLabel}<br/>CAD Project Management
@@ -84,6 +79,12 @@ export default function App(){
       </aside>
 
       <main className="main-content">
+        <div className="global-actions">
+          <button type="button" className="signout-inline" onClick={handleLogout}>
+            <ArrowRightOnRectangleIcon className="h-5 w-5" />
+            <span>Sign out</span>
+          </button>
+        </div>
         <Outlet context={{ closeNav }} />
       </main>
     </div>

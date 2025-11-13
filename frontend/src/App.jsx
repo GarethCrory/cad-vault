@@ -21,12 +21,17 @@ export default function App(){
 
   function handleLogout(){
     if (typeof window === "undefined") return;
-    const logoutBase = import.meta.env.VITE_LOGOUT_URL || "/.cdn-cgi/access/logout";
     const origin = window.location.origin || "/";
-    const base = logoutBase || "/";
-    const joiner = base.includes("?") ? "&" : "?";
-    const target = `${base}${origin ? `${joiner}returnTo=${encodeURIComponent(origin)}` : ""}`;
-    window.location.href = target;
+    const logoutBase = import.meta.env.VITE_LOGOUT_URL || "/cdn-cgi/access/logout";
+    try {
+      const url = new URL(logoutBase, origin);
+      if (origin) url.searchParams.set("return_to", origin);
+      window.location.href = url.toString();
+    } catch {
+      const base = logoutBase || "/";
+      const joiner = base.includes("?") ? "&" : "?";
+      window.location.href = `${base}${origin ? `${joiner}return_to=${encodeURIComponent(origin)}` : ""}`;
+    }
   }
 
   return (

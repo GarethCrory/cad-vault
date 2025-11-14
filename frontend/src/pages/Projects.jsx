@@ -255,7 +255,7 @@ export default function Projects(){
                 return (
                   <div
                     key={cardId}
-                    className={`tile relative group cursor-grab transition-opacity ${isDragging ? "ring-2 ring-orange-300 bg-slate-50 opacity-0" : "opacity-100"}`}
+                    className={`tile relative group cursor-grab transition-all ${isDragging ? "ring-2 ring-orange-300 bg-slate-50 opacity-70" : "opacity-100"}`}
                     draggable
                     onDragStart={(e) => handleProjectDragStart(e, cardId)}
                     onDragOver={handleProjectDragOver}

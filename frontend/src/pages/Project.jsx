@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { scanProject, history, editPart, generateRelease, API_BASE, bomTree, bomGet, deletePart, listAttachments, uploadAttachments, deleteAttachment } from "../api.js";
 import { linkAssembly } from "../api.assembly.js";
 import { listAssembly } from "../api.assembly.js";
-import { PencilSquareIcon, ClockIcon, BoltIcon, ArrowUpTrayIcon, XMarkIcon, CheckCircleIcon, LinkIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { FolderIcon, PencilSquareIcon, ClockIcon, BoltIcon, ArrowUpTrayIcon, XMarkIcon, CheckCircleIcon, LinkIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import HistoryModal from "../components/HistoryModal";
 import AssembliesPanel from "../components/AssembliesPanel.jsx";
 import AddComponentsModal from "../components/AddComponentsModal.jsx";
@@ -483,7 +483,9 @@ export default function Project(){
 
         <div className="card p-6 grid gap-6 lg:grid-cols-2 items-start">
           <div className="flex items-start gap-4">
-            <div className="h-14 w-14 rounded-xl bg-ink text-white grid place-items-center text-2xl">📁</div>
+            <div className="h-14 w-14 rounded-xl bg-ink text-white grid place-items-center">
+              <FolderIcon className="h-7 w-7 text-white" aria-hidden="true" />
+            </div>
             <div>
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <span className="text-xs text-slate-500">{projectNumber}</span>

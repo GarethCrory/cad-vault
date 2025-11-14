@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { Link, useNavigate } from "react-router-dom";
 import { createProject, deleteProject as apiDeleteProject, listProjects, updateProjectMeta, renameProject, reorderProjects } from "../api.js";
 import { fetchClients, mergeClientRecords, upsertClient } from "../lib/clientStore.js";
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { FolderIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 function projectKey(project, fallbackIndex = 0){
   if (project?.projectDir) return project.projectDir;
@@ -285,8 +285,8 @@ export default function Projects(){
                     <Link to={link} className="block" style={draggingProjectId ? { pointerEvents: "none" } : undefined}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
-                        <div className="h-12 w-12 rounded-lg bg-slate-100 grid place-items-center text-lg">
-                          📁
+                        <div className="h-12 w-12 rounded-lg bg-slate-100 grid place-items-center">
+                          <FolderIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -477,7 +477,7 @@ function NewProjectModal({ defaultNumber, onClose, onCreated, mode = "create", i
       <div className="card w-full max-w-4xl p-6 relative">
         <button className="btn-ghost absolute right-4 top-4 text-sm" onClick={onClose}>Close</button>
         <h2 className="text-2xl font-extrabold mb-2 flex items-center gap-2">
-          <span role="img" aria-label="folder">📁</span>
+          <FolderIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
           {isEdit ? "Edit Project" : "Add New Project"}
         </h2>
         <p className="text-sm text-slate-500 mb-6">
@@ -547,10 +547,12 @@ function NewProjectModal({ defaultNumber, onClose, onCreated, mode = "create", i
               <button className="btn btn-secondary" type="button" onClick={onClose}>Cancel</button>
             </div>
           </form>
-          <div className="card bg-slate-50 border-slate-200 h-fit">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="h-12 w-12 rounded-2xl bg-slate-200 grid place-items-center text-lg">📁</div>
+                <div className="card bg-slate-50 border-slate-200 h-fit">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="h-12 w-12 rounded-2xl bg-slate-200 grid place-items-center">
+                        <FolderIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
+                      </div>
                 <div>
                   <div className="text-xs text-slate-500">{projectNumber || defaultNumber}</div>
                   <div className="text-xl font-semibold">{projectName || "Project name"}</div>

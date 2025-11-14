@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Cog6ToothIcon, UserGroupIcon, HomeIcon } from "@heroicons/react/24/outline";
+import { Cog6ToothIcon, UserGroupIcon, HomeIcon, FolderIcon } from "@heroicons/react/24/outline";
 
 export default function App(){
   const navClass = ({ isActive }) =>
@@ -10,7 +10,9 @@ export default function App(){
     <div className="app-shell">
       <aside className="sidebar w-64 bg-white border-r border-slate-200 flex flex-col">
         <div className="px-5 py-5 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-ink text-white grid place-items-center text-xl">📁</div>
+          <div className="h-10 w-10 rounded-xl bg-ink text-white grid place-items-center">
+            <FolderIcon className="h-6 w-6" aria-hidden="true" />
+          </div>
           <div>
             <div className="font-extrabold tracking-tight
             ">CAD Vault</div>

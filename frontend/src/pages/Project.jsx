@@ -475,7 +475,7 @@ export default function Project(){
     <div className="page-container compact">
       <div className="space-y-6 w-full">
         <div>
-          <Link to="/" className="back-link">
+          <Link to="/" className="btn btn-secondary inline-flex items-center gap-2">
             <ArrowLeftIcon className="h-4 w-4" />
             <span>Back to Projects</span>
           </Link>

@@ -547,12 +547,12 @@ function NewProjectModal({ defaultNumber, onClose, onCreated, mode = "create", i
               <button className="btn btn-secondary" type="button" onClick={onClose}>Cancel</button>
             </div>
           </form>
-                <div className="card bg-slate-50 border-slate-200 h-fit">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="h-12 w-12 rounded-2xl bg-slate-200 grid place-items-center">
-                        <FolderIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
-                      </div>
+          <div className="card bg-slate-50 border-slate-200 h-fit">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-slate-200 grid place-items-center">
+                  <FolderIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
+                </div>
                 <div>
                   <div className="text-xs text-slate-500">{projectNumber || defaultNumber}</div>
                   <div className="text-xl font-semibold">{projectName || "Project name"}</div>

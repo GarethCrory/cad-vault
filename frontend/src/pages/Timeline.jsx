@@ -398,53 +398,62 @@ function NewTaskModal({ onClose, onSave, projectOptions = [], clientDirectory = 
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 grid place-items-center px-4">
-      <div className="card w-full max-w-3xl p-6 relative">
+      <div className="card timeline-modal w-full max-w-4xl p-8 relative">
         <button className="btn-ghost absolute right-4 top-4 text-sm" onClick={onClose}>✕</button>
-        <h2 className="text-2xl font-extrabold mb-4 flex items-center gap-2">
-          <Bars3BottomLeftIcon className="h-6 w-6" />
-          {isEdit ? "Edit Task" : "Add New Task"}
-        </h2>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="text-xs font-semibold text-slate-500">Task *</label>
-            <input className="input mt-1" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Prepare STEP for Acme bracket" />
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Project</label>
-              <select className="input mt-1" value={projectKey} onChange={(e) => setProjectKey(e.target.value)}>
-                <option value="">Not linked to a project</option>
-                {projectOptions.map((p) => (
-                  <option key={p.key} value={p.key}>{p.label}</option>
-                ))}
-              </select>
+        <div className="timeline-icon-badge">
+          <Bars3BottomLeftIcon className="h-7 w-7" />
+        </div>
+        <div className="text-center mb-6">
+          <div className="text-2xl font-bold text-slate-800">{isEdit ? "Edit Task" : "Add New Task"}</div>
+          <div className="text-sm text-slate-500 mt-1">Quickly capture what needs doing and link it to projects/clients.</div>
+        </div>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-3">
+              <div className="text-sm font-semibold text-slate-700">Task Details</div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500">Task name *</label>
+                <input className="input mt-1" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Prepare STEP for Acme bracket" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500">Project</label>
+                <select className="input mt-1" value={projectKey} onChange={(e) => setProjectKey(e.target.value)}>
+                  <option value="">Not linked to a project</option>
+                  {projectOptions.map((p) => (
+                    <option key={p.key} value={p.key}>{p.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500">Client</label>
+                <select className="input mt-1" value={client} onChange={(e) => setClient(e.target.value)}>
+                  <option value="">Select client</option>
+                  {clientDirectory.map((c) => (
+                    <option key={c.name} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Client</label>
-              <select className="input mt-1" value={client} onChange={(e) => setClient(e.target.value)}>
-                <option value="">Select client</option>
-                {clientDirectory.map((c) => (
-                  <option key={c.name} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Status</label>
-              <select className="input mt-1" value={status} onChange={(e) => setStatus(e.target.value)}>
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Due date</label>
-              <input type="date" className="input mt-1" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Notes</label>
-              <input className="input mt-1" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional note" />
+            <div className="space-y-3">
+              <div className="text-sm font-semibold text-slate-700">Schedule & Status</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500">Status</label>
+                  <select className="input mt-1" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500">Due date</label>
+                  <input type="date" className="input mt-1" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500">Notes</label>
+                <textarea className="input mt-1 h-24" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Context, links, acceptance criteria…" />
+              </div>
             </div>
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}

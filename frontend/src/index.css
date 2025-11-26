@@ -1174,3 +1174,31 @@ button.action-icon svg {
   height: 26px;
   padding: 0 10px;
 }
+.timeline-modal {
+  background: #fdfdfd;
+  border: 1px solid #e8ecf2;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  position: relative;
+}
+.timeline-icon-badge {
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f0f4ff, #e8fbff);
+  border: 6px solid #fff;
+  box-shadow: 0 14px 28px rgba(59, 130, 246, 0.25);
+  display: grid;
+  place-items: center;
+  color: #2563eb;
+}
+.timeline-modal h2,
+.timeline-modal .text-center {
+  margin-top: 12px;
+}
+.timeline-modal label {
+  letter-spacing: 0.03em;
+}

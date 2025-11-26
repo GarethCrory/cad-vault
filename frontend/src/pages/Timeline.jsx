@@ -413,11 +413,11 @@ function NewTaskModal({ onClose, onSave, projectOptions = [], clientDirectory = 
               <div className="text-sm font-semibold text-slate-700">Task Details</div>
               <div>
                 <label className="text-xs font-semibold text-slate-500">Task name *</label>
-                <input className="input mt-1" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Prepare STEP for Acme bracket" />
+                <input className="input mt-1 w-full" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Prepare STEP for Acme bracket" />
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-500">Project</label>
-                <select className="input mt-1" value={projectKey} onChange={(e) => setProjectKey(e.target.value)}>
+                <select className="input mt-1 w-full" value={projectKey} onChange={(e) => setProjectKey(e.target.value)}>
                   <option value="">Not linked to a project</option>
                   {projectOptions.map((p) => (
                     <option key={p.key} value={p.key}>{p.label}</option>
@@ -426,7 +426,7 @@ function NewTaskModal({ onClose, onSave, projectOptions = [], clientDirectory = 
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-500">Client</label>
-                <select className="input mt-1" value={client} onChange={(e) => setClient(e.target.value)}>
+                <select className="input mt-1 w-full" value={client} onChange={(e) => setClient(e.target.value)}>
                   <option value="">Select client</option>
                   {clientDirectory.map((c) => (
                     <option key={c.name} value={c.name}>{c.name}</option>
@@ -439,7 +439,7 @@ function NewTaskModal({ onClose, onSave, projectOptions = [], clientDirectory = 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-500">Status</label>
-                  <select className="input mt-1" value={status} onChange={(e) => setStatus(e.target.value)}>
+                  <select className="input mt-1 w-full" value={status} onChange={(e) => setStatus(e.target.value)}>
                     {STATUS_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
@@ -447,12 +447,12 @@ function NewTaskModal({ onClose, onSave, projectOptions = [], clientDirectory = 
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-500">Due date</label>
-                  <input type="date" className="input mt-1" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                  <input type="date" className="input mt-1 w-full" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
                 </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-500">Notes</label>
-                <textarea className="input mt-1 h-24" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Context, links, acceptance criteria…" />
+                <textarea className="input mt-1 h-24 w-full" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Context, links, acceptance criteria…" />
               </div>
             </div>
           </div>

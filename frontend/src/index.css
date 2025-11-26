@@ -910,14 +910,22 @@ button svg {
 
 .input,
 .select {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
   border-color: var(--mono-border);
   background: var(--mono-panel);
   color: var(--mono-ink);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 .input:focus,
 .select:focus {
   border-color: var(--mono-accent);
-  box-shadow: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 /* Refined dropdowns */
@@ -943,6 +951,15 @@ select.input:focus,
 select.select:focus {
   border-color: var(--mono-accent);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+select.input,
+select.select,
+input.input,
+textarea.input {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+textarea.input {
+  min-height: 120px;
 }
 
 .badge {

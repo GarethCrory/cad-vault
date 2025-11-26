@@ -61,26 +61,16 @@ function reorderById(list = [], fromId, toId){
   return next;
 }
 
-const emptyForm = {
-  id: null,
-  title: "",
-  projectKey: "",
-  client: "",
-  dueDate: "",
-  status: "todo",
-  notes: ""
-};
-
 export default function Timeline(){
   const [tasks, setTasks] = useState(() => loadTasks());
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
-  const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
   const [draggingId, setDraggingId] = useState(null);
-  const [error, setError] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
 
   const loadProjects = useCallback(async () => {
     try{
@@ -152,66 +142,38 @@ export default function Timeline(){
       });
   }, [tasks, statusFilter, clientFilter, search, projectOptions, clientDirectory]);
 
-  function resetForm(){
-    setForm(emptyForm);
-    setError("");
-  }
-
-  function handleProjectSelect(value){
-    setForm((prev) => {
-      const match = projectOptions.find((p) => p.key === value);
-      return {
-        ...prev,
-        projectKey: value,
-        client: match?.client || prev.client
-      };
-    });
-  }
-
   function handleEditTask(task){
-    setForm({
-      id: task.id,
-      title: task.title,
-      projectKey: makeProjectKey(task.projectNumber, task.projectName),
-      client: task.client,
-      dueDate: task.dueDate || "",
-      status: task.status || "todo",
-      notes: task.notes || ""
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setEditingTask(task);
+    setShowModal(true);
   }
 
   function handleDeleteTask(task){
     if (!window.confirm(`Delete "${task.title}" from the timeline?`)) return;
     setTasks((prev) => prev.filter((t) => t.id !== task.id));
-    if (form.id === task.id) resetForm();
   }
 
-  function handleSaveTask(e){
-    e.preventDefault();
-    if (!form.title.trim()){
-      setError("A task title is required");
-      return;
-    }
-    const selectedProject = projectOptions.find((p) => p.key === form.projectKey);
+  function handleSaveTask(data){
+    const selectedProject = projectOptions.find((p) => p.key === data.projectKey);
+    const existing = data.id ? tasks.find((t) => t.id === data.id) : null;
     const payload = {
-      id: form.id || makeId(),
-      title: form.title.trim(),
+      id: data.id || makeId(),
+      title: data.title.trim(),
       projectNumber: selectedProject?.projectNumber || "",
       projectName: selectedProject?.projectName || "",
-      client: (form.client || selectedProject?.client || "Personal Projects").trim(),
-      dueDate: form.dueDate || "",
-      status: form.status || "todo",
-      notes: form.notes || "",
-      createdAt: form.createdAt || new Date().toISOString()
+      client: (data.client || selectedProject?.client || "Personal Projects").trim(),
+      dueDate: data.dueDate || "",
+      status: data.status || "todo",
+      notes: data.notes || "",
+      createdAt: existing?.createdAt || new Date().toISOString()
     };
     setTasks((prev) => {
-      if (form.id){
-        return prev.map((t) => (t.id === form.id ? { ...payload, createdAt: t.createdAt || payload.createdAt } : t));
+      if (data.id){
+        return prev.map((t) => (t.id === data.id ? { ...payload, createdAt: t.createdAt || payload.createdAt } : t));
       }
       return [payload, ...prev];
     });
-    resetForm();
+    setEditingTask(null);
+    setShowModal(false);
   }
 
   function handleDragStart(e, id){
@@ -269,90 +231,12 @@ export default function Timeline(){
           </div>
         </div>
 
-        <div className="card p-6 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <div className="text-sm font-semibold text-slate-700">{form.id ? "Edit task" : "Add a new task"}</div>
-              <div className="text-xs text-slate-500">Link to a project so you can jump back to the right workspace.</div>
-            </div>
-            {form.id && (
-              <button className="btn btn-secondary" type="button" onClick={resetForm}>Cancel edit</button>
-            )}
+        <div className="card p-6 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <div className="text-sm font-semibold text-slate-700">Timeline tasks</div>
+            <div className="text-xs text-slate-500">Add a task to track what’s next.</div>
           </div>
-          <form className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" onSubmit={handleSaveTask}>
-            <div className="lg:col-span-2">
-              <label className="text-xs font-semibold text-slate-500">Task *</label>
-              <input
-                className="input mt-1"
-                placeholder="e.g. Prepare STEP for Acme bracket"
-                value={form.title}
-                onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Status</label>
-              <select
-                className="input mt-1"
-                value={form.status}
-                onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Project</label>
-              <select
-                className="input mt-1"
-                value={form.projectKey}
-                onChange={(e) => handleProjectSelect(e.target.value)}
-              >
-                <option value="">Not linked to a project</option>
-                {projectOptions.map((p) => (
-                  <option key={p.key} value={p.key}>{p.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Client</label>
-              <select
-                className="input mt-1"
-                value={form.client}
-                onChange={(e) => setForm((prev) => ({ ...prev, client: e.target.value }))}
-              >
-                <option value="">Select client</option>
-                {clientDirectory.map((c) => (
-                  <option key={c.name} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500">Due date</label>
-              <input
-                type="date"
-                className="input mt-1"
-                value={form.dueDate}
-                onChange={(e) => setForm((prev) => ({ ...prev, dueDate: e.target.value }))}
-              />
-            </div>
-            <div className="lg:col-span-3">
-              <label className="text-xs font-semibold text-slate-500">Notes</label>
-              <textarea
-                className="input mt-1 h-20"
-                placeholder="Context, links, acceptance criteria…"
-                value={form.notes}
-                onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-              />
-            </div>
-            {error && <div className="text-sm text-red-600 lg:col-span-3">{error}</div>}
-            <div className="flex items-center gap-3 lg:col-span-3">
-              <button type="submit" className="btn btn-primary">
-                {form.id ? "Save task" : "Add task"}
-              </button>
-              <div className="text-xs text-slate-500">Tasks appear at the top as highest priority.</div>
-            </div>
-          </form>
+          <button className="btn btn-primary" onClick={() => { setEditingTask(null); setShowModal(true); }}>+ New task</button>
         </div>
 
         <div className="card p-5 space-y-4">
@@ -469,6 +353,106 @@ export default function Timeline(){
             </table>
           </div>
         </div>
+
+        {showModal && (
+          <NewTaskModal
+            onClose={() => { setShowModal(false); setEditingTask(null); }}
+            onSave={handleSaveTask}
+            projectOptions={projectOptions}
+            clientDirectory={clientDirectory}
+            initialTask={editingTask}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NewTaskModal({ onClose, onSave, projectOptions = [], clientDirectory = [], initialTask = null }){
+  const isEdit = Boolean(initialTask);
+  const [title, setTitle] = useState(initialTask?.title || "");
+  const [projectKey, setProjectKey] = useState(initialTask ? makeProjectKey(initialTask.projectNumber, initialTask.projectName) : "");
+  const [client, setClient] = useState(initialTask?.client || "");
+  const [dueDate, setDueDate] = useState(initialTask?.dueDate || "");
+  const [status, setStatus] = useState(initialTask?.status || "todo");
+  const [notes, setNotes] = useState(initialTask?.notes || "");
+  const [error, setError] = useState("");
+
+  function handleSubmit(e){
+    e.preventDefault();
+    if (!title.trim()){
+      setError("Task title is required");
+      return;
+    }
+    setError("");
+    onSave({
+      id: initialTask?.id || null,
+      title,
+      projectKey,
+      client,
+      dueDate,
+      status,
+      notes
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/30 z-50 grid place-items-center px-4">
+      <div className="card w-full max-w-3xl p-6 relative">
+        <button className="btn-ghost absolute right-4 top-4 text-sm" onClick={onClose}>✕</button>
+        <h2 className="text-2xl font-extrabold mb-4 flex items-center gap-2">
+          <Bars3BottomLeftIcon className="h-6 w-6" />
+          {isEdit ? "Edit Task" : "Add New Task"}
+        </h2>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="text-xs font-semibold text-slate-500">Task *</label>
+            <input className="input mt-1" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Prepare STEP for Acme bracket" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="text-xs font-semibold text-slate-500">Project</label>
+              <select className="input mt-1" value={projectKey} onChange={(e) => setProjectKey(e.target.value)}>
+                <option value="">Not linked to a project</option>
+                {projectOptions.map((p) => (
+                  <option key={p.key} value={p.key}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500">Client</label>
+              <select className="input mt-1" value={client} onChange={(e) => setClient(e.target.value)}>
+                <option value="">Select client</option>
+                {clientDirectory.map((c) => (
+                  <option key={c.name} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-500">Status</label>
+              <select className="input mt-1" value={status} onChange={(e) => setStatus(e.target.value)}>
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500">Due date</label>
+              <input type="date" className="input mt-1" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500">Notes</label>
+              <input className="input mt-1" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional note" />
+            </div>
+          </div>
+          {error && <div className="text-sm text-red-600">{error}</div>}
+          <div className="flex items-center gap-3 justify-end">
+            <button className="btn btn-secondary" type="button" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary" type="submit">{isEdit ? "Save task" : "Add task"}</button>
+          </div>
+        </form>
       </div>
     </div>
   );

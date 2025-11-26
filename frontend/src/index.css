@@ -1143,31 +1143,9 @@ button.action-icon svg {
   background: rgba(249, 115, 22, 0.12);
   color: var(--vault-accent);
 }
-.timeline-grid {
-  display: grid;
-  gap: 1rem;
-}
-.timeline-card {
-  border: 1px dashed var(--mono-border);
-  border-radius: 1rem;
-  padding: 1.1rem;
-  background: #fff;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-  cursor: grab;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-.timeline-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
-}
-.timeline-card.dragging {
-  border-color: rgba(99, 102, 241, 0.4);
-  background: #f8fafc;
-  opacity: 0.8;
-}
 .priority-dot {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: 9999px;
   background: #eef1f8;
   display: inline-flex;
@@ -1175,4 +1153,24 @@ button.action-icon svg {
   justify-content: center;
   font-weight: 700;
   color: var(--mono-ink);
+}
+.timeline-table .td {
+  vertical-align: middle;
+}
+.timeline-row {
+  cursor: grab;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+.timeline-row:hover .td {
+  background: #f6f8ff;
+}
+.timeline-row.dragging .td {
+  background: #eef2ff;
+}
+.timeline-table .cell-actions {
+  min-width: 120px;
+}
+.timeline-table .chip {
+  height: 26px;
+  padding: 0 10px;
 }

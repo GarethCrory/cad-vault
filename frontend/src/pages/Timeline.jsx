@@ -389,78 +389,84 @@ export default function Timeline(){
             <div className="text-xs text-slate-500">Drag between rows to reprioritise.</div>
           </div>
 
-          <div className="timeline-grid" onDragOver={handleDragOver} onDrop={handleDrop}>
-            {filteredTasks.map((task, idx) => {
-              const statusStyle = STATUS_OPTIONS.find((s) => s.value === task.status)?.tone || "bg-slate-100 text-slate-700";
-              const isDragging = draggingId === task.id;
-              return (
-                <div
-                  key={task.id}
-                  className={`timeline-card ${isDragging ? "dragging" : ""}`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, task.id)}
-                  onDragEnter={() => handleDragEnter(task.id)}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                  aria-grabbed={isDragging}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="priority-dot">{idx + 1}</span>
-                      <span>Priority</span>
-                    </div>
-                    <div className={`chip ${statusStyle}`}>{STATUS_OPTIONS.find((s) => s.value === task.status)?.label || "To do"}</div>
-                  </div>
-                  <div className="mt-3">
-                    <div className="text-lg font-semibold">{task.title}</div>
-                    {task.notes && <div className="text-sm text-slate-600 mt-1">{task.notes}</div>}
-                  </div>
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="flex items-start gap-2 text-sm text-slate-600">
-                      <FolderIcon className="h-5 w-5 text-slate-400" />
-                      <div>
-                        <div className="text-xs uppercase text-slate-400">Project</div>
+          <div className="table-scroll">
+            <table className="table compact timeline-table" onDragOver={handleDragOver} onDrop={handleDrop}>
+              <thead>
+                <tr>
+                  <th className="th w-10">#</th>
+                  <th className="th">Task</th>
+                  <th className="th">Project</th>
+                  <th className="th">Client</th>
+                  <th className="th">Due</th>
+                  <th className="th">Status</th>
+                  <th className="th text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTasks.map((task, idx) => {
+                  const statusStyle = STATUS_OPTIONS.find((s) => s.value === task.status)?.tone || "bg-slate-100 text-slate-700";
+                  const isDragging = draggingId === task.id;
+                  return (
+                    <tr
+                      key={task.id}
+                      className={`timeline-row ${isDragging ? "dragging" : ""}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, task.id)}
+                      onDragEnter={() => handleDragEnter(task.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      onDragEnd={handleDragEnd}
+                      aria-grabbed={isDragging}
+                    >
+                      <td className="td" data-label="#">
+                        <span className="priority-dot">{idx + 1}</span>
+                      </td>
+                      <td className="td" data-label="Task">
+                        <div className="font-semibold text-sm">{task.title}</div>
+                        {task.notes && <div className="text-xs text-slate-500 truncate max-w-xs">{task.notes}</div>}
+                      </td>
+                      <td className="td" data-label="Project">
                         {task.project ? (
-                          <Link to={task.projectLink} className="text-indigo-600 hover:underline">
-                            {task.project.projectNumber} — {task.project.projectName}
+                          <Link to={task.projectLink} className="inline-flex items-center gap-2 text-indigo-600 hover:underline">
+                            <FolderIcon className="h-4 w-4 text-slate-400" />
+                            <span className="truncate max-w-[220px]">{task.project.projectNumber} — {task.project.projectName}</span>
                           </Link>
                         ) : (
-                          <div className="text-slate-500">Not linked</div>
+                          <span className="text-slate-500">Not linked</span>
                         )}
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-slate-600">
-                      <UserGroupIcon className="h-5 w-5 text-slate-400" />
-                      <div>
-                        <div className="text-xs uppercase text-slate-400">Client</div>
-                        <div>{task.clientName}</div>
+                      </td>
+                      <td className="td" data-label="Client">
+                        <div className="text-sm">{task.clientName}</div>
                         {task.client?.contactPerson && (
                           <div className="text-xs text-slate-500">Contact: {task.client.contactPerson}</div>
                         )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between text-sm text-slate-600 flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
-                      <CalendarDaysIcon className="h-5 w-5 text-slate-400" />
-                      <span>{task.dueDate ? `Due ${formatDate(task.dueDate)}` : "No due date"}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="btn-ghost p-2 rounded-full" title="Edit task" onClick={() => handleEditTask(task)}>
-                        <PencilSquareIcon className="h-5 w-5" />
-                      </button>
-                      <button className="btn-ghost p-2 rounded-full text-red-500" title="Delete task" onClick={() => handleDeleteTask(task)}>
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {filteredTasks.length === 0 && (
-              <div className="p-4 text-sm text-slate-500">No tasks yet. Add a task and start prioritising.</div>
-            )}
+                      </td>
+                      <td className="td" data-label="Due">
+                        <div className="text-sm">{task.dueDate ? formatDate(task.dueDate) : "No date"}</div>
+                      </td>
+                      <td className="td" data-label="Status">
+                        <span className={`chip ${statusStyle}`}>{STATUS_OPTIONS.find((s) => s.value === task.status)?.label || "To do"}</span>
+                      </td>
+                      <td className="td cell-actions text-right" data-label="Actions">
+                        <div className="inline-flex items-center gap-2">
+                          <button className="btn-ghost p-2 rounded-full" title="Edit task" onClick={() => handleEditTask(task)}>
+                            <PencilSquareIcon className="h-5 w-5" />
+                          </button>
+                          <button className="btn-ghost p-2 rounded-full text-red-500" title="Delete task" onClick={() => handleDeleteTask(task)}>
+                            <TrashIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filteredTasks.length === 0 && (
+                  <tr>
+                    <td className="td text-sm text-slate-500" colSpan={7}>No tasks yet. Add a task and start prioritising.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

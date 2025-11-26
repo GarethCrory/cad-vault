@@ -1133,3 +1133,46 @@ button.action-icon svg {
   gap: 0.75rem;
   margin-top: 1.5rem;
 }
+
+/* Timeline page */
+.chip-soft {
+  background: #eef2ff;
+  color: #4338ca;
+}
+.chip-accent {
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--vault-accent);
+}
+.timeline-grid {
+  display: grid;
+  gap: 1rem;
+}
+.timeline-card {
+  border: 1px dashed var(--mono-border);
+  border-radius: 1rem;
+  padding: 1.1rem;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.timeline-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+.timeline-card.dragging {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: #f8fafc;
+  opacity: 0.8;
+}
+.priority-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: #eef1f8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--mono-ink);
+}

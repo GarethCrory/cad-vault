@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Cog6ToothIcon, UserGroupIcon, HomeIcon, FolderIcon } from "@heroicons/react/24/outline";
+import { Cog6ToothIcon, UserGroupIcon, HomeIcon, FolderIcon, Bars3BottomLeftIcon } from "@heroicons/react/24/outline";
 
 export default function App(){
   const navClass = ({ isActive }) =>
@@ -27,6 +27,10 @@ export default function App(){
           <NavLink className={navClass} to="/clients">
             <UserGroupIcon className="h-5 w-5" />
             Clients
+          </NavLink>
+          <NavLink className={navClass} to="/timeline">
+            <Bars3BottomLeftIcon className="h-5 w-5" />
+            Timeline
           </NavLink>
           <NavLink className={navClass} to="/settings">
             <Cog6ToothIcon className="h-5 w-5" />

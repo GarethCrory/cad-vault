@@ -8,12 +8,14 @@ import Projects from "./pages/Projects.jsx";
 import Project from "./pages/Project.jsx";
 import Clients from "./pages/Clients.jsx";
 import Settings from "./pages/Settings.jsx";
+import Timeline from "./pages/Timeline.jsx";
 
 const router = createBrowserRouter([
   { path: "/", element: <App />, children: [
       { index: true, element: <Projects /> },
       { path: "p/:projectNumber/:projectName", element: <Project /> },
       { path: "clients", element: <Clients /> },
+      { path: "timeline", element: <Timeline /> },
       { path: "settings", element: <Settings /> }
   ] }
 ]);

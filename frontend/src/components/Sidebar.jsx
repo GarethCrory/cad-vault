@@ -5,7 +5,6 @@ import {
   UserGroupIcon,
   HomeIcon,
   FolderIcon,
-  Bars3BottomLeftIcon,
   UsersIcon,
   UserIcon,
   CurrencyDollarIcon,
@@ -78,10 +77,6 @@ const Sidebar = () => {
               </div>
             )}
           </div>
-          <NavLink to="/timeline" className={navClass}>
-            <Bars3BottomLeftIcon className="h-6 w-6 mr-3" />
-            Timeline
-          </NavLink>
           <NavLink to="/settings" className={navClass}>
             <Cog6ToothIcon className="h-6 w-6 mr-3" />
             Settings

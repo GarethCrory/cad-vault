@@ -2,7 +2,7 @@ export const onRequestPost = async ({ request, env }) => {
   try {
     const { userId = "user-123" } = await request.json().catch(() => ({}));
     const key = `tasks/${userId}.json`;
-    const obj = await env.R2_BUCKET.get(key);
+    const obj = await env.UPLOADS_BUCKET.get(key);
     if (!obj) return new Response(JSON.stringify({ tasks: [], etag: null }), { headers: { "Content-Type": "application/json" } });
     const text = await obj.text();
     let data; try { data = JSON.parse(text); } catch { data = { tasks: [] }; }

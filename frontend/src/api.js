@@ -1,4 +1,4 @@
-const API_BASE = import.meta?.env?.VITE_API_BASE || "";
+export const API_BASE = import.meta?.env?.VITE_API_BASE || "";
 const BASE = API_BASE;
 
 async function jpost(path, body){

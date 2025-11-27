@@ -46,7 +46,7 @@ const Sidebar = () => {
           <div>
             <button
               onClick={() => setAccountingOpen(!accountingOpen)}
-              className={`flex items-center w-full px-4 py-2 mt-2 rounded-lg text-gray-200 hover:bg-gray-700 hover:text-white transition bg-transparent ${(accountingOpen || isAccountingActive) ? activeClasses : ""}`}
+              className={`${baseLink} mt-2 ${(accountingOpen || isAccountingActive) ? activeClasses : ""}`}
             >
               <CurrencyDollarIcon className="h-6 w-6 mr-3" />
               Accounting

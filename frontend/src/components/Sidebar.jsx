@@ -19,7 +19,7 @@ import {
 const Sidebar = () => {
   const location = useLocation();
   const isAccountingActive = location.pathname.startsWith('/accounting');
-  const activeClasses = "text-emerald-300 font-semibold";
+  const activeClasses = "text-orange-400 font-semibold";
   const baseLink = "flex items-center w-full px-4 py-2 rounded-lg text-gray-200 hover:bg-gray-700 hover:text-white transition";
   const navClass = ({ isActive }) => `${baseLink} ${isActive ? activeClasses : ""}`;
   const [accountingOpen, setAccountingOpen] = useState(isAccountingActive);

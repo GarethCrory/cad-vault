@@ -22,7 +22,8 @@ async function post(path, payload = {}) {
 }
 
 export async function listTasks(userId = "user-123") {
-  const { tasks, etag } = await post("list", { userId });
+  const payload = userId ? { userId } : {};
+  const { tasks, etag } = await post("list", payload);
   return { tasks, etag };
 }
 
@@ -33,17 +34,21 @@ export async function addTask(data) {
 }
 
 export async function updateTask(data) {
-  // data must include id and userId
+  // data must include id; userId optional
   const out = await post("update", data);
   return out.task;
 }
 
 export async function reorderTasks(userId, order) {
-  const out = await post("reorder", { userId, order });
+  const payload = { order };
+  if (userId) payload.userId = userId;
+  const out = await post("reorder", payload);
   return !!out.ok;
 }
 
 export async function deleteTask(userId, id) {
-  const out = await post("delete", { userId, id });
+  const payload = { id };
+  if (userId) payload.userId = userId;
+  const out = await post("delete", payload);
   return !!out.ok;
 }

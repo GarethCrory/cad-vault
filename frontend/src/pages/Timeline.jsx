@@ -12,8 +12,6 @@ const STATUS_OPTIONS = [
   { value: "done", label: "Done", tone: "bg-green-100 text-green-700" }
 ];
 
-const USER_ID = "user-123"; // placeholder until auth is wired
-
 function makeProjectKey(projectNumber, projectName){
   if (!projectNumber && !projectName) return "";
   return `${projectNumber || "unknown"}__${projectName || ""}`;
@@ -66,7 +64,7 @@ export default function Timeline(){
   const reloadTasks = useCallback(async () => {
     setLoading(true);
     try{
-      const res = await listTasks(USER_ID);
+      const res = await listTasks();
       setTasks(Array.isArray(res.tasks) ? res.tasks : []);
     }catch(err){
       console.warn("Unable to load timeline tasks", err);
@@ -132,7 +130,7 @@ export default function Timeline(){
   async function handleDeleteTask(task){
     if (!window.confirm(`Delete "${task.title}" from the timeline?`)) return;
     try{
-      await deleteTask(USER_ID, task.id);
+      await deleteTask(null, task.id);
       await reloadTasks();
     }catch(err){
       console.warn("Unable to delete timeline task", err);
@@ -142,7 +140,6 @@ export default function Timeline(){
   async function handleSaveTask(data){
     const selectedProject = projectOptions.find((p) => p.key === data.projectKey);
     const payload = {
-      userId: USER_ID,
       id: data.id || undefined,
       title: data.title.trim(),
       projectNumber: selectedProject?.projectNumber || "",
@@ -153,11 +150,8 @@ export default function Timeline(){
       notes: data.notes || ""
     };
     try{
-      if (data.id){
-        await updateTask(payload);
-      }else{
-        await addTask(payload);
-      }
+      if (data.id) await updateTask(payload);
+      else await addTask(payload);
       await reloadTasks();
     }catch(err){
       console.warn("Unable to save timeline tasks", err);
@@ -189,7 +183,7 @@ export default function Timeline(){
     if (e?.preventDefault) e.preventDefault();
     setDraggingId(null);
     const order = tasks.map((t) => t.id);
-    reorderTasks(USER_ID, order).catch((err) => console.warn("Unable to reorder timeline tasks", err));
+    reorderTasks(null, order).catch((err) => console.warn("Unable to reorder timeline tasks", err));
   }
 
   function handleDragEnd(){

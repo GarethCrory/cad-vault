@@ -1,4 +1,7 @@
-export const API_BASE = import.meta?.env?.VITE_API_BASE || "";
+const devDefault = (typeof window !== "undefined" && window.location?.port === "5173")
+  ? "http://localhost:4000"
+  : "";
+export const API_BASE = import.meta?.env?.VITE_API_BASE || devDefault;
 const BASE = API_BASE;
 
 async function jpost(path, body){

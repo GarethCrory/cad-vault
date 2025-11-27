@@ -1,6 +1,9 @@
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
-const API_BASE = import.meta?.env?.VITE_API_BASE || "";
+const devDefault = (typeof window !== "undefined" && window.location?.port === "5173")
+  ? "http://localhost:4000"
+  : "";
+const API_BASE = import.meta?.env?.VITE_API_BASE || devDefault;
 
 async function post(path, payload = {}) {
   const res = await fetch(`${API_BASE}/api/tasks/${path}`, {

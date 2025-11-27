@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { Bars3BottomLeftIcon, CalendarDaysIcon, FolderIcon, PencilSquareIcon, TrashIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { listProjects, getTimelineTasks, saveTimelineTasks } from "../api.js";
 import { fetchClients, mergeClientRecords } from "../lib/clientStore.js";
-
-const TASK_STORE_KEY = "cadVault.timelineTasks.v1";
 const STATUS_OPTIONS = [
   { value: "todo", label: "To do", tone: "bg-slate-100 text-slate-700" },
   { value: "in_progress", label: "In progress", tone: "bg-amber-100 text-amber-700" },
@@ -12,23 +10,6 @@ const STATUS_OPTIONS = [
   { value: "done", label: "Done", tone: "bg-green-100 text-green-700" }
 ];
 
-function readLocalTasks(){
-  if (typeof window === "undefined") return [];
-  try{
-    const raw = window.localStorage.getItem(TASK_STORE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  }catch{
-    return [];
-  }
-}
-
-function writeLocalTasks(tasks = []){
-  if (typeof window === "undefined") return;
-  try{
-    window.localStorage.setItem(TASK_STORE_KEY, JSON.stringify(tasks));
-  }catch{/* noop */}
-}
 
 function makeId(){
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
@@ -59,7 +40,7 @@ function reorderById(list = [], fromId, toId){
 }
 
 export default function Timeline(){
-  const [tasks, setTasks] = useState(() => readLocalTasks());
+  const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
@@ -93,18 +74,21 @@ export default function Timeline(){
         const res = await getTimelineTasks();
         if (Array.isArray(res.tasks)) {
           setTasks(res.tasks);
-          writeLocalTasks(res.tasks);
         }
-      }catch{/* fallback to local */}
-      remoteReadyRef.current = true;
+      }catch(err){
+        console.warn("Unable to load timeline tasks", err);
+      }finally{
+        remoteReadyRef.current = true;
+      }
     }
     loadRemote();
   }, []);
 
   useEffect(() => {
-    writeLocalTasks(tasks);
     if (!remoteReadyRef.current) return;
-    saveTimelineTasks(tasks).catch(() => {/* ignore */});
+    saveTimelineTasks(tasks).catch((err) => {
+      console.warn("Unable to save timeline tasks", err);
+    });
   }, [tasks]);
 
   const projectOptions = useMemo(() => {

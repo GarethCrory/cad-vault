@@ -561,7 +561,7 @@ button:active,
 
 /* App shell: fixed sidebar + fluid main content */
 :root {
-  --sidebar-width: 240px;
+  --sidebar-width: 200px;
 }
 
 /* new app shell */
@@ -631,14 +631,11 @@ button:active,
 
 /* main area fills remaining space and scrolls independently */
 .main-content {
-  margin-left: var(--sidebar-width);
-  width: calc(100% - var(--sidebar-width));
   min-height: 100vh;
-  padding: 12px 14px;
+  padding: 12px;
   box-sizing: border-box;
   overflow: auto;
   background: linear-gradient(180deg, #f5f7fb 0%, #eef2fa 100%);
-  display: block;
 }
 
 /* make page container use max width centered for desktop like preview */

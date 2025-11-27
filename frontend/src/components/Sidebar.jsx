@@ -24,7 +24,7 @@ const Sidebar = () => {
     `flex items-center px-4 py-2 text-gray-100 hover:bg-gray-700 ${isActive ? 'bg-gray-700' : ''}`;
 
   return (
-    <div className="flex flex-col w-64 bg-gray-800">
+    <div className="flex flex-col w-56 bg-gray-800">
       <div className="flex items-center justify-center h-16 bg-gray-900">
         <span className="text-white font-bold uppercase">CAD Vault</span>
       </div>

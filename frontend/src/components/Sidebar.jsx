@@ -45,8 +45,9 @@ const Sidebar = () => {
           </NavLink>
           <div>
             <button
+              type="button"
               onClick={() => setAccountingOpen(!accountingOpen)}
-              className={`${baseLink} mt-2 ${(accountingOpen || isAccountingActive) ? activeClasses : ""}`}
+              className={`sidebar-btn ${baseLink} mt-2 ${(accountingOpen || isAccountingActive) ? activeClasses : ""}`}
             >
               <CurrencyDollarIcon className="h-6 w-6 mr-3" />
               Accounting

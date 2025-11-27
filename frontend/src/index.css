@@ -406,6 +406,17 @@ button:active, .btn:active {
   stroke: currentColor;
 }
 
+.sidebar-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+.sidebar-btn:hover {
+  background: rgba(99, 102, 241, 0.16) !important;
+  color: #fff !important;
+}
 .sidebar-section {
   margin-top: 0.35rem;
 }

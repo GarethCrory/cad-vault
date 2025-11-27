@@ -1,13 +1,11 @@
 import "dotenv/config";
-import path from "path";
-import fsp from "fs/promises";
 import { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 
-const hasR2 =
-  process.env.R2_ACCOUNT_ID &&
-  process.env.R2_BUCKET &&
-  process.env.R2_ACCESS_KEY_ID &&
-  process.env.R2_SECRET_ACCESS_KEY;
+const required = ["R2_ACCOUNT_ID", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY"];
+const missing = required.filter((k) => !process.env[k]);
+if (missing.length) {
+  throw new Error(`Missing R2 configuration: ${missing.join(", ")}`);
+}
 
 function s3() {
   return new S3Client({
@@ -22,28 +20,7 @@ function s3() {
 }
 const Bucket = process.env.R2_BUCKET;
 
-const DATA_ROOT = path.join(process.cwd(), "data", "tasks-cache");
-
-function localPath(Key = "") {
-  const safeKey = Key.replace(/^\/*/, "");
-  return path.join(DATA_ROOT, safeKey);
-}
-
-async function ensureDirFor(Key) {
-  const dir = path.dirname(localPath(Key));
-  await fsp.mkdir(dir, { recursive: true });
-}
-
 export async function getJson(Key){
-  if (!hasR2) {
-    try{
-      const raw = await fsp.readFile(localPath(Key), "utf8");
-      return { data: JSON.parse(raw), etag: null };
-    }catch(err){
-      if (err.code === "ENOENT") return { data: null, etag: null };
-      throw err;
-    }
-  }
   try{
     const out = await s3().send(new GetObjectCommand({ Bucket, Key }));
     const text = await out.Body.transformToString();
@@ -55,15 +32,6 @@ export async function getJson(Key){
 }
 
 export async function head(Key){
-  if (!hasR2) {
-    try{
-      const st = await fsp.stat(localPath(Key));
-      return { etag: String(st.mtimeMs) };
-    }catch(err){
-      if (err.code === "ENOENT") return null;
-      throw err;
-    }
-  }
   try{
     const out = await s3().send(new HeadObjectCommand({ Bucket, Key }));
     return { etag: out.ETag?.replaceAll('"','') };
@@ -74,13 +42,6 @@ export async function head(Key){
 }
 
 export async function putJson(Key, data){
-  if (!hasR2) {
-    await ensureDirFor(Key);
-    const Body = JSON.stringify(data, null, 2);
-    await fsp.writeFile(localPath(Key), Body, "utf8");
-    const st = await fsp.stat(localPath(Key));
-    return { etag: String(st.mtimeMs) };
-  }
   const Body = JSON.stringify(data);
   const out = await s3().send(new PutObjectCommand({ Bucket, Key, Body, ContentType:"application/json" }));
   return { etag: out.ETag?.replaceAll('"','') };

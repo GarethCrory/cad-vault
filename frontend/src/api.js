@@ -1,4 +1,5 @@
-export const API_BASE = ""; const BASE = API_BASE;
+const API_BASE = import.meta?.env?.VITE_API_BASE || "";
+const BASE = API_BASE;
 
 async function jpost(path, body){
   const r = await fetch(BASE + path, {
@@ -156,10 +157,23 @@ export async function saveClientOrderRemote(order = []){
   return jpost("/api/clients/order", { order });
 }
 
-export async function getTimelineTasks(){
-  return jpost("/api/tasks/list", {});
+// Timeline (tasks) API
+export async function timelineList(payload = {}){
+  return jpost("/api/tasks/list", payload);
 }
 
-export async function saveTimelineTasks(tasks = []){
-  return jpost("/api/tasks/add", { tasks });
+export async function timelineAdd(payload){
+  return jpost("/api/tasks/add", payload);
+}
+
+export async function timelineUpdate(payload){
+  return jpost("/api/tasks/update", payload);
+}
+
+export async function timelineReorder(order = [], userId){
+  return jpost("/api/tasks/reorder", { order, userId });
+}
+
+export async function timelineDelete(id, userId){
+  return jpost("/api/tasks/delete", { id, userId });
 }

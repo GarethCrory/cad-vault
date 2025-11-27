@@ -1,7 +1,9 @@
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
+const API_BASE = import.meta?.env?.VITE_API_BASE || "";
+
 async function post(path, payload = {}) {
-  const res = await fetch(`/api/tasks/${path}`, {
+  const res = await fetch(`${API_BASE}/api/tasks/${path}`, {
     method: "POST",
     headers: JSON_HEADERS,
     body: JSON.stringify(payload),

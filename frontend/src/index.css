@@ -407,15 +407,16 @@ button:active, .btn:active {
 }
 
 .sidebar-btn {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding-left: 1rem !important;
-  padding-right: 1rem !important;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  color: inherit;
 }
 .sidebar-btn:hover {
-  background: rgba(99, 102, 241, 0.16) !important;
-  color: #fff !important;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
 }
 .sidebar-section {
   margin-top: 0.35rem;

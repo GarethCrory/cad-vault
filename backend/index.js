@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import fsp from "fs/promises";
 import setupReleaseRoutes from "./releaseRoutes.js";
+import { loadTimeline, saveTimeline } from "./timelineService.js";
 import { ensureProjectScaffold, projectPath, PROJECT_ROOT, writeProjectMeta, readProjectMetaSync, renameProjectDirectory, candidateProjectDirs } from "./projectService.js";
 import { saveUploadedFile } from "./fileService.js";
 import { getPartHistory, deletePartBatch } from "./historyService.js";
@@ -21,9 +22,6 @@ import { removePartReferences } from "./bomService.js";
 // optional - some repos may have this, otherwise ignore
 let editPartBatch = null;
 try { ({ editPartBatch } = await import("./editService.js")); } catch {}
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const TIMELINE_STORE = path.join(DATA_DIR, "timeline.json");
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -217,27 +215,10 @@ app.post("/api/projects/reorder", async (req, res) => {
   }
 });
 
-async function loadTimeline(){
-  try{
-    await fsp.mkdir(DATA_DIR, { recursive: true });
-    const raw = await fsp.readFile(TIMELINE_STORE, "utf8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed.tasks) ? parsed.tasks : (Array.isArray(parsed) ? parsed : []);
-  }catch{
-    return [];
-  }
-}
-
-async function saveTimeline(tasks = []){
-  await fsp.mkdir(DATA_DIR, { recursive: true });
-  const payload = { tasks: Array.isArray(tasks) ? tasks : [] };
-  await fsp.writeFile(TIMELINE_STORE, JSON.stringify(payload, null, 2), "utf8");
-}
-
 app.post("/api/timeline/list", async (req, res) => {
   try{
-    const tasks = await loadTimeline();
-    res.json({ tasks });
+    const { tasks, source } = await loadTimeline();
+    res.json({ tasks, source });
   }catch(err){
     console.error("timeline list error", err);
     res.status(500).json({ error: "Unable to load timeline" });
@@ -247,8 +228,8 @@ app.post("/api/timeline/list", async (req, res) => {
 app.post("/api/timeline/save", async (req, res) => {
   try{
     const tasks = Array.isArray(req.body?.tasks) ? req.body.tasks : [];
-    await saveTimeline(tasks);
-    res.json({ ok: true, count: tasks.length });
+    const { target } = await saveTimeline(tasks);
+    res.json({ ok: true, count: tasks.length, target });
   }catch(err){
     console.error("timeline save error", err);
     res.status(500).json({ error: "Unable to save timeline" });

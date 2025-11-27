@@ -43,6 +43,7 @@ export default function Timeline(){
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
+  const [storageSource, setStorageSource] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
@@ -75,6 +76,7 @@ export default function Timeline(){
         if (Array.isArray(res.tasks)) {
           setTasks(res.tasks);
         }
+        if (res?.source) setStorageSource(res.source);
       }catch(err){
         console.warn("Unable to load timeline tasks", err);
       }finally{
@@ -86,9 +88,13 @@ export default function Timeline(){
 
   useEffect(() => {
     if (!remoteReadyRef.current) return;
-    saveTimelineTasks(tasks).catch((err) => {
-      console.warn("Unable to save timeline tasks", err);
-    });
+    saveTimelineTasks(tasks)
+      .then((res) => {
+        if (res?.target) setStorageSource(res.target);
+      })
+      .catch((err) => {
+        console.warn("Unable to save timeline tasks", err);
+      });
   }, [tasks]);
 
   const projectOptions = useMemo(() => {
@@ -218,6 +224,11 @@ export default function Timeline(){
             <div className="mt-4 flex gap-3 text-sm text-slate-600 flex-wrap">
               <span className="chip chip-soft">Total tasks: {tasks.length}</span>
               <span className="chip chip-soft">Open: {openTasks.length}</span>
+              {storageSource && (
+                <span className="chip chip-soft">
+                  Storage: {storageSource.toUpperCase()}
+                </span>
+              )}
               {nextDue && (
                 <span className="chip chip-soft chip-accent">
                   Next due: {formatDate(nextDue.dueDate)} — {nextDue.title}
@@ -227,7 +238,9 @@ export default function Timeline(){
           </div>
           <div className="text-right space-y-2 text-sm text-slate-500">
             <div>Drag cards to set priority (top = highest).</div>
-            <div className="text-xs">Tasks are saved locally in your browser.</div>
+            <div className="text-xs">
+              Tasks sync to R2 when available; falling back to local storage otherwise.
+            </div>
           </div>
         </div>
 

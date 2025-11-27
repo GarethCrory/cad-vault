@@ -1,9 +1,11 @@
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
-const devDefault = (typeof window !== "undefined" && window.location?.port === "5173")
+const isBrowser = typeof window !== "undefined";
+const devDefault = isBrowser && window.location?.port === "5173"
   ? "http://localhost:4000"
   : "";
-const API_BASE = import.meta?.env?.VITE_API_BASE || devDefault;
+const sameOrigin = isBrowser ? window.location.origin : "";
+const API_BASE = import.meta?.env?.VITE_API_BASE || sameOrigin || devDefault;
 
 async function post(path, payload = {}) {
   const res = await fetch(`${API_BASE}/api/tasks/${path}`, {

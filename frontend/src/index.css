@@ -907,6 +907,57 @@ textarea.input {
   color: var(--mono-ink);
 }
 
+/* Timeline */
+.priority-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #eef1f8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--mono-ink);
+}
+.timeline-row {
+  cursor: grab;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+.timeline-row:hover .td {
+  background: #f6f8ff;
+}
+.timeline-row.dragging .td {
+  background: #eef2ff;
+}
+.timeline-table .cell-actions {
+  min-width: 120px;
+}
+.timeline-table .chip {
+  height: 26px;
+  padding: 0 10px;
+}
+.timeline-modal {
+  background: #fdfdfd;
+  border: 1px solid #e8ecf2;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  position: relative;
+}
+.timeline-icon-badge {
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f0f4ff, #e8fbff);
+  border: 6px solid #fff;
+  box-shadow: 0 14px 28px rgba(59, 130, 246, 0.25);
+  display: grid;
+  place-items: center;
+  color: #2563eb;
+}
+
 .icon-btn {
   border-color: var(--nav-accent);
   background: rgba(249,115,22,0.08);

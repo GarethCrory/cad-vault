@@ -195,39 +195,39 @@ export default function Projects(){
 
   return (
     <div className="page-container">
-      <div className="space-y-3">
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold">Projects</h1>
-            <div className="text-xs text-slate-500 mt-0">Manage your CAD projects and deliverables</div>
+            <h1 className="text-3xl font-extrabold">Projects</h1>
+            <div className="text-sm text-slate-500 mt-1">Manage your CAD projects and deliverables</div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <input
               value={q}
               onChange={e=>setQ(e.target.value)}
               placeholder="Search projects by name, number or client..."
               className="input mr-1"
-              style={{ minWidth: 300 }}
+              style={{ minWidth: 340 }}
             />
-            <button className="btn btn-outline-cta py-1 px-3 text-xs" onClick={()=>navigate("/clients")}>
+            <button className="btn btn-outline-cta py-1.5 px-4 text-sm" onClick={()=>navigate("/clients")}>
               + New Client
             </button>
-            <button className="btn btn-cta py-1 px-3 text-xs" onClick={()=>setShowNewProject(true)}>
+            <button className="btn btn-cta py-1.5 px-4 text-sm" onClick={()=>setShowNewProject(true)}>
               + New Project
             </button>
           </div>
         </div>
 
-        <div className="card p-3">
+        <div className="card p-4">
           <div className="flex items-center justify-between mb-2 text-sm text-slate-500 flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <div>
                 <div className="text-xs uppercase tracking-wide text-slate-400">Total Projects</div>
-                <strong className="text-xl text-slate-900">{projects.length}</strong>
+                <strong className="text-2xl text-slate-900">{projects.length}</strong>
               </div>
               <div>
                 <div className="text-xs uppercase tracking-wide text-slate-400">Total Parts</div>
-                <strong className="text-xl text-orange-500">{totalPartsAcrossProjects}</strong>
+                <strong className="text-2xl text-orange-500">{totalPartsAcrossProjects}</strong>
               </div>
             </div>
             <div className="text-xs text-slate-400">Updated {new Date().toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" })}</div>
@@ -284,27 +284,27 @@ export default function Projects(){
                     </div>
                     <Link to={link} className="block" style={draggingProjectId ? { pointerEvents: "none" } : undefined}>
                     <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-2">
-                        <div className="h-10 w-10 rounded-lg bg-slate-100 grid place-items-center">
-                          <FolderIcon className="h-5 w-5 text-slate-500" aria-hidden="true" />
+                    <div className="flex items-start gap-3">
+                        <div className="h-11 w-11 rounded-lg bg-slate-100 grid place-items-center">
+                          <FolderIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <div className="text-xs text-slate-500">{p.projectNumber}</div>
                             {p.active && <div className="badge-green text-xs">active</div>}
                           </div>
-                          <div className="text-base font-semibold mt-0">{p.projectName}</div>
-                          <div className="text-xs text-slate-500 mt-0">{p.client || "Personal Projects"}</div>
-                          {created && <div className="text-xs text-slate-400 mt-0">Created {created}</div>}
+                          <div className="text-lg font-semibold mt-0.5">{p.projectName}</div>
+                          <div className="text-xs text-slate-500 mt-0.5">{p.client || "Personal Projects"}</div>
+                          {created && <div className="text-xs text-slate-400 mt-0.5">Created {created}</div>}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-slate-500">Total Parts</div>
-                        <div className="text-xl font-bold">{partsCount}</div>
+                        <div className="text-2xl font-bold">{partsCount}</div>
                       </div>
                     </div>
 
-                      <div className="mt-2 flex items-center justify-between">
+                      <div className="mt-3 flex items-center justify-between">
                         <div className="text-xs text-slate-500">{partsCount} parts</div>
                         <div className="chip chip-step">STEP</div>
                       </div>

@@ -8,11 +8,11 @@
 .tile-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .page-title {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--vault-text-primary);
 }
@@ -111,23 +111,22 @@
   background: #f3f5fa;
 }
 .table th {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: var(--vault-text-secondary);
-  height: 28px;
   padding: 6px 10px;
   border-bottom: 1px solid var(--vault-border);
   text-align: left;
 }
 
 .table td {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--vault-text-primary);
-  height: 30px;
-  padding: 6px 10px;
+  height: 32px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--vault-border);
   background: #fff;
   text-align: left;
@@ -196,7 +195,7 @@
   height: 16px;
   border-radius: var(--vault-radius-pill);
   padding: 0 8px;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -313,8 +312,8 @@ button, .btn, .btn-primary, .btn-secondary, .upload-btn {
   color: var(--vault-text-primary);
   font-size: 13px;
   font-weight: 600;
-  height: 32px;
-  padding: 0 16px;
+  height: 32px; /* Adjusted height */
+  padding: 0 14px; /* Adjusted padding */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -562,7 +561,7 @@ button:active,
 
 /* App shell: fixed sidebar + fluid main content */
 :root {
-  --sidebar-width: 260px;
+  --sidebar-width: 240px;
 }
 
 /* new app shell */
@@ -635,7 +634,7 @@ button:active,
   margin-left: var(--sidebar-width);
   width: calc(100% - var(--sidebar-width));
   min-height: 100vh;
-  padding: 12px 16px;
+  padding: 12px 14px;
   box-sizing: border-box;
   overflow: auto;
   background: linear-gradient(180deg, #f5f7fb 0%, #eef2fa 100%);
@@ -717,7 +716,7 @@ button:active,
 html,body {
   background-color: var(--mono-bg);
   color: var(--mono-ink);
-  font-size: 12px; /* Reduced font size */
+  font-size: 14px; /* Reverted font size */
 }
 
 .app-shell {
@@ -818,8 +817,8 @@ button svg {
 .select {
   display: block;
   width: 100%;
-  min-height: 44px;
-  padding: 0.6rem 0.85rem;
+  min-height: 36px; /* Adjusted min-height */
+  padding: 0.4rem 0.75rem; /* Adjusted padding */
   border-radius: 12px;
   border-color: var(--mono-border);
   background: var(--mono-panel);

@@ -34,7 +34,7 @@ const Sidebar = () => {
             <UserGroupIcon className="h-6 w-6 mr-3" />
             Clients
           </NavLink>
-          <NavLink to="/" className={navClass}>
+          <NavLink to="/" end className={navClass}>
             <HomeIcon className="h-6 w-6 mr-3" />
             Projects
           </NavLink>
@@ -45,7 +45,7 @@ const Sidebar = () => {
           <div>
             <button
               onClick={() => setAccountingOpen(!accountingOpen)}
-              className={`flex items-center w-full px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700 ${isAccountingActive ? 'bg-gray-700' : ''}`}
+              className={`flex items-center w-full px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700 ${(accountingOpen || isAccountingActive) ? 'bg-gray-700' : ''}`}
             >
               <CurrencyDollarIcon className="h-6 w-6 mr-3" />
               Accounting

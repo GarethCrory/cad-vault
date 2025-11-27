@@ -1,8 +1,14 @@
 import "dotenv/config";
 import { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 
-const required = ["R2_ACCOUNT_ID", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY"];
+const endpoint =
+  process.env.R2_ENDPOINT ||
+  process.env.R2_URL ||
+  (process.env.R2_ACCOUNT_ID ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : null);
+
+const required = ["R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY"];
 const missing = required.filter((k) => !process.env[k]);
+if (!endpoint) missing.push("R2_ENDPOINT (or R2_URL or R2_ACCOUNT_ID)");
 if (missing.length) {
   throw new Error(`Missing R2 configuration: ${missing.join(", ")}`);
 }
@@ -10,7 +16,7 @@ if (missing.length) {
 function s3() {
   return new S3Client({
     region: "auto",
-    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    endpoint,
     credentials: {
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY

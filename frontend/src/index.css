@@ -415,6 +415,16 @@ button:active, .btn:active {
   color: #cbd5f5 !important;
   width: 100%;
 }
+.sidebar-btn,
+.sidebar-btn:hover,
+.sidebar-btn:focus,
+.sidebar-btn:active {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: #cbd5f5 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
 .sidebar-btn:hover {
   background: rgba(99, 102, 241, 0.16) !important;
   color: #fff !important;

@@ -19,6 +19,7 @@ import {
 import bomRoutes from "./bomRoutes.js";
 import attachmentRoutes from "./attachmentRoutes.js";
 import { removePartReferences } from "./bomService.js";
+import tasks from "./routes/tasks.js";
 // optional - some repos may have this, otherwise ignore
 let editPartBatch = null;
 try { ({ editPartBatch } = await import("./editService.js")); } catch {}
@@ -453,6 +454,8 @@ app.post("/api/assembly/updateQty", async (req, res) => {
 
 // Health
 app.get("/api/health", (req,res) => res.json({ ok: true }));
+
+app.use("/api/tasks", tasks);
 
 app.listen(PORT, () => {
   console.log(`✅ CAD Vault backend running at http://localhost:${PORT}`);

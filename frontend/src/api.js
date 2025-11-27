@@ -157,9 +157,9 @@ export async function saveClientOrderRemote(order = []){
 }
 
 export async function getTimelineTasks(){
-  return jpost("/api/timeline/list", {});
+  return jpost("/api/tasks/list", {});
 }
 
 export async function saveTimelineTasks(tasks = []){
-  return jpost("/api/timeline/save", { tasks });
+  return jpost("/api/tasks/add", { tasks });
 }

@@ -1,0 +1,42 @@
+const JSON_HEADERS = { "Content-Type": "application/json" };
+
+async function post(path, payload = {}) {
+  const res = await fetch(`/api/tasks/${path}`, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try { const j = await res.json(); if (j?.message) msg = j.message; } catch {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+export async function listTasks(userId = "user-123") {
+  const { tasks, etag } = await post("list", { userId });
+  return { tasks, etag };
+}
+
+export async function addTask(data) {
+  // data: { userId, title, status, priority, clientId, clientName, projectNumber, projectName, dueDate }
+  const out = await post("add", data);
+  return out.task;
+}
+
+export async function updateTask(data) {
+  // data must include id and userId
+  const out = await post("update", data);
+  return out.task;
+}
+
+export async function reorderTasks(userId, order) {
+  const out = await post("reorder", { userId, order });
+  return !!out.ok;
+}
+
+export async function deleteTask(userId, id) {
+  const out = await post("delete", { userId, id });
+  return !!out.ok;
+}

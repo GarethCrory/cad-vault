@@ -8,7 +8,6 @@ import Projects from "./pages/Projects.jsx";
 import Project from "./pages/Project.jsx";
 import Clients from "./pages/Clients.jsx";
 import Settings from "./pages/Settings.jsx";
-import Timeline from "./pages/Timeline.jsx";
 import PeopleUsers from "./pages/PeopleUsers.jsx";
 import PeopleGuests from "./pages/PeopleGuests.jsx";
 import AccountingInvoices from "./pages/AccountingInvoices.jsx";
@@ -27,7 +26,6 @@ const router = createBrowserRouter([
       { path: "accounting/estimates", element: <AccountingEstimates /> },
       { path: "accounting/recurring", element: <AccountingRecurring /> },
       { path: "accounting/expenses", element: <AccountingExpenses /> },
-      { path: "timeline", element: <Timeline /> },
       { path: "settings", element: <Settings /> }
   ] }
 ]);

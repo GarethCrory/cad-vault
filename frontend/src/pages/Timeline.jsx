@@ -66,25 +66,26 @@ export default function Timeline(){
     setClients(list);
   }, []);
 
+  const reloadTimeline = useCallback(async () => {
+    try{
+      const res = await getTimelineTasks();
+      if (Array.isArray(res.tasks)) {
+        setTasks(res.tasks);
+      }
+      if (res?.source) setStorageSource(res.source);
+    }catch(err){
+      console.warn("Unable to load timeline tasks", err);
+    }finally{
+      remoteReadyRef.current = true;
+    }
+  }, []);
+
   useEffect(() => { loadProjects(); }, [loadProjects]);
   useEffect(() => { loadClients(); }, [loadClients]);
 
   useEffect(() => {
-    async function loadRemote(){
-      try{
-        const res = await getTimelineTasks();
-        if (Array.isArray(res.tasks)) {
-          setTasks(res.tasks);
-        }
-        if (res?.source) setStorageSource(res.source);
-      }catch(err){
-        console.warn("Unable to load timeline tasks", err);
-      }finally{
-        remoteReadyRef.current = true;
-      }
-    }
-    loadRemote();
-  }, []);
+    reloadTimeline();
+  }, [reloadTimeline]);
 
   useEffect(() => {
     if (!remoteReadyRef.current) return;
@@ -158,7 +159,7 @@ export default function Timeline(){
     setTasks((prev) => prev.filter((t) => t.id !== task.id));
   }
 
-  function handleSaveTask(data){
+  async function handleSaveTask(data){
     const selectedProject = projectOptions.find((p) => p.key === data.projectKey);
     const existing = data.id ? tasks.find((t) => t.id === data.id) : null;
     const payload = {
@@ -172,14 +173,24 @@ export default function Timeline(){
       notes: data.notes || "",
       createdAt: existing?.createdAt || new Date().toISOString()
     };
-    setTasks((prev) => {
+    const nextTasks = (() => {
       if (data.id){
-        return prev.map((t) => (t.id === data.id ? { ...payload, createdAt: t.createdAt || payload.createdAt } : t));
+        return tasks.map((t) => (t.id === data.id ? { ...payload, createdAt: t.createdAt || payload.createdAt } : t));
       }
-      return [payload, ...prev];
-    });
-    setEditingTask(null);
-    setShowModal(false);
+      return [payload, ...tasks];
+    })();
+
+    try{
+      await saveTimelineTasks(nextTasks);
+      await reloadTimeline();
+    }catch(err){
+      console.warn("Unable to save timeline tasks", err);
+      // fall back to optimistic update so the user sees the change
+      setTasks(nextTasks);
+    }finally{
+      setEditingTask(null);
+      setShowModal(false);
+    }
   }
 
   function handleDragStart(e, id){

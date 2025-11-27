@@ -22,6 +22,9 @@ import { removePartReferences } from "./bomService.js";
 let editPartBatch = null;
 try { ({ editPartBatch } = await import("./editService.js")); } catch {}
 
+const DATA_DIR = path.join(process.cwd(), "data");
+const TIMELINE_STORE = path.join(DATA_DIR, "timeline.json");
+
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 
@@ -211,6 +214,44 @@ app.post("/api/projects/reorder", async (req, res) => {
   } catch (e) {
     console.error("projects reorder error", e);
     res.status(400).json({ error: e.message });
+  }
+});
+
+async function loadTimeline(){
+  try{
+    await fsp.mkdir(DATA_DIR, { recursive: true });
+    const raw = await fsp.readFile(TIMELINE_STORE, "utf8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed.tasks) ? parsed.tasks : (Array.isArray(parsed) ? parsed : []);
+  }catch{
+    return [];
+  }
+}
+
+async function saveTimeline(tasks = []){
+  await fsp.mkdir(DATA_DIR, { recursive: true });
+  const payload = { tasks: Array.isArray(tasks) ? tasks : [] };
+  await fsp.writeFile(TIMELINE_STORE, JSON.stringify(payload, null, 2), "utf8");
+}
+
+app.post("/api/timeline/list", async (req, res) => {
+  try{
+    const tasks = await loadTimeline();
+    res.json({ tasks });
+  }catch(err){
+    console.error("timeline list error", err);
+    res.status(500).json({ error: "Unable to load timeline" });
+  }
+});
+
+app.post("/api/timeline/save", async (req, res) => {
+  try{
+    const tasks = Array.isArray(req.body?.tasks) ? req.body.tasks : [];
+    await saveTimeline(tasks);
+    res.json({ ok: true, count: tasks.length });
+  }catch(err){
+    console.error("timeline save error", err);
+    res.status(500).json({ error: "Unable to save timeline" });
   }
 });
 

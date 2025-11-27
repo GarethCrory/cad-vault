@@ -19,9 +19,10 @@ import {
 const Sidebar = () => {
   const location = useLocation();
   const isAccountingActive = location.pathname.startsWith('/accounting');
+  const activeClasses = "text-emerald-300 font-semibold";
+  const baseLink = "flex items-center w-full px-4 py-2 rounded-lg text-gray-200 hover:bg-gray-700 hover:text-white transition";
+  const navClass = ({ isActive }) => `${baseLink} ${isActive ? activeClasses : ""}`;
   const [accountingOpen, setAccountingOpen] = useState(isAccountingActive);
-  const navClass = ({ isActive }) =>
-    `flex items-center px-4 py-2 text-gray-100 hover:bg-gray-700 ${isActive ? 'bg-gray-700' : ''}`;
 
   return (
     <div className="flex flex-col w-56 bg-gray-800">
@@ -45,7 +46,7 @@ const Sidebar = () => {
           <div>
             <button
               onClick={() => setAccountingOpen(!accountingOpen)}
-              className={`flex items-center w-full px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700 ${(accountingOpen || isAccountingActive) ? 'bg-gray-700' : ''}`}
+              className={`flex items-center w-full px-4 py-2 mt-2 rounded-lg text-gray-200 hover:bg-gray-700 hover:text-white transition bg-transparent ${(accountingOpen || isAccountingActive) ? activeClasses : ""}`}
             >
               <CurrencyDollarIcon className="h-6 w-6 mr-3" />
               Accounting

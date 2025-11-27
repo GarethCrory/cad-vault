@@ -125,8 +125,8 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--vault-text-primary);
-  height: 32px;
-  padding: 8px 10px;
+  height: 30px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--vault-border);
   background: #fff;
   text-align: left;
@@ -407,9 +407,9 @@ button:active, .btn:active {
 }
 
 .sidebar-btn {
-  background: transparent;
-  border: none;
-  box-shadow: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   padding-left: 1rem;
   padding-right: 1rem;
   color: inherit;

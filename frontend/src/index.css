@@ -12,7 +12,7 @@
   --vault-gold:#d97706;
   --vault-green:#16a34a;
 }
-html,body{font-family:"Inter",sans-serif;background:var(--vault-bg);color:var(--vault-ink);}
+html,body{font-family:"Inter",sans-serif;background:var(--vault-bg);color:var(--vault-ink);font-size:14px;}
 .btn{background:var(--vault-accent);color:#fff;border-radius:.75rem;font-weight:600;transition:.2s;}
 .btn:hover{filter:brightness(1.1);}
 .tab-active{border-bottom:3px solid var(--vault-accent);color:var(--vault-accent);}
@@ -113,7 +113,7 @@ body {
   background-color: var(--vault-card-bg);
   border: 1px solid var(--vault-border);
   border-radius: var(--vault-radius-card);
-  padding: 24px;
+  padding: 16px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -136,7 +136,7 @@ body {
 
 /* Headings */
 .page-title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--vault-text-primary);
 }
@@ -168,7 +168,7 @@ body {
   background-color: var(--vault-accent);
   color: #fff;
   border-radius: 10px;
-  height: 44px;
+  height: 36px;
   padding: 0 16px;
   font-size: 14px;
   font-weight: 600;
@@ -240,7 +240,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: var(--vault-text-secondary);
-  height: 44px;
+  height: 36px;
   padding: 0 12px;
   border-bottom: 1px solid var(--vault-border);
   text-align: left;
@@ -250,7 +250,7 @@ body {
   font-size: 14px;
   font-weight: 500;
   color: var(--vault-text-primary);
-  height: 44px;
+  height: 36px;
   padding: 12px;
   border-bottom: 1px solid var(--vault-border);
   background: #fff;
@@ -437,7 +437,7 @@ button, .btn, .btn-primary, .btn-secondary, .upload-btn {
   color: var(--vault-text-primary);
   font-size: 14px;
   font-weight: 600;
-  height: 44px;
+  height: 36px;
   padding: 0 16px;
   display: inline-flex;
   align-items: center;
@@ -755,15 +755,8 @@ button:active,
 }
 
 /* main area fills remaining space and scrolls independently */
-.app-shell .main-content {
-  margin-left: var(--sidebar-width);
-  width: calc(100% - var(--sidebar-width));
-  min-height: 100vh;
-  padding: 24px 32px;
-  box-sizing: border-box;
-  overflow: auto;
-  background: linear-gradient(180deg, #f5f7fb 0%, #eef2fa 100%);
-  display: block;
+.main-content {
+  padding: 2rem;
 }
 
 /* make page container use max width centered for desktop like preview */

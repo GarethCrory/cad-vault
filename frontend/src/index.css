@@ -408,7 +408,7 @@ button:active, .btn:active {
 
 .sidebar-btn {
   background: transparent !important;
-  border: none !important;
+  border: 1px solid transparent !important;
   box-shadow: none !important;
   padding-left: 1rem;
   padding-right: 1rem;

@@ -155,3 +155,11 @@ export async function getClientOrder(){
 export async function saveClientOrderRemote(order = []){
   return jpost("/api/clients/order", { order });
 }
+
+export async function getTimelineTasks(){
+  return jpost("/api/timeline/list", {});
+}
+
+export async function saveTimelineTasks(tasks = []){
+  return jpost("/api/timeline/save", { tasks });
+}

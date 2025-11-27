@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bars3BottomLeftIcon, CalendarDaysIcon, FolderIcon, PencilSquareIcon, TrashIcon, UserGroupIcon } from "@heroicons/react/24/outline";
-import { listProjects } from "../api.js";
+import { listProjects, getTimelineTasks, saveTimelineTasks } from "../api.js";
 import { fetchClients, mergeClientRecords } from "../lib/clientStore.js";
 
 const TASK_STORE_KEY = "cadVault.timelineTasks.v1";
@@ -12,25 +12,22 @@ const STATUS_OPTIONS = [
   { value: "done", label: "Done", tone: "bg-green-100 text-green-700" }
 ];
 
-function loadTasks(){
+function readLocalTasks(){
   if (typeof window === "undefined") return [];
   try{
     const raw = window.localStorage.getItem(TASK_STORE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed;
+    return Array.isArray(parsed) ? parsed : [];
   }catch{
     return [];
   }
 }
 
-function persistTasks(tasks = []){
+function writeLocalTasks(tasks = []){
   if (typeof window === "undefined") return;
   try{
     window.localStorage.setItem(TASK_STORE_KEY, JSON.stringify(tasks));
-  }catch{
-    /* noop */
-  }
+  }catch{/* noop */}
 }
 
 function makeId(){
@@ -62,7 +59,7 @@ function reorderById(list = [], fromId, toId){
 }
 
 export default function Timeline(){
-  const [tasks, setTasks] = useState(() => loadTasks());
+  const [tasks, setTasks] = useState(() => readLocalTasks());
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
@@ -71,6 +68,7 @@ export default function Timeline(){
   const [draggingId, setDraggingId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const remoteReadyRef = useRef(false);
 
   const loadProjects = useCallback(async () => {
     try{
@@ -89,7 +87,25 @@ export default function Timeline(){
   useEffect(() => { loadProjects(); }, [loadProjects]);
   useEffect(() => { loadClients(); }, [loadClients]);
 
-  useEffect(() => { persistTasks(tasks); }, [tasks]);
+  useEffect(() => {
+    async function loadRemote(){
+      try{
+        const res = await getTimelineTasks();
+        if (Array.isArray(res.tasks)) {
+          setTasks(res.tasks);
+          writeLocalTasks(res.tasks);
+        }
+      }catch{/* fallback to local */}
+      remoteReadyRef.current = true;
+    }
+    loadRemote();
+  }, []);
+
+  useEffect(() => {
+    writeLocalTasks(tasks);
+    if (!remoteReadyRef.current) return;
+    saveTimelineTasks(tasks).catch(() => {/* ignore */});
+  }, [tasks]);
 
   const projectOptions = useMemo(() => {
     return projects.map((p) => ({
